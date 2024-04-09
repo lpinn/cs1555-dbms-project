@@ -1,5 +1,5 @@
 /* testing */
-CREATE SCHEMA olympic_schema
+CREATE SCHEMA olympic_schema;
 
 CREATE DOMAIN role_check AS VARCHAR(12)
     CHECK (VALUE IN ('Organizer', 'Participant', 'Guest'));
@@ -149,6 +149,7 @@ CREATE TABLE olympic_schema.PLACEMENT
     position INTEGER,
     CONSTRAINT PLACEMENT_PK
         PRIMARY KEY (team),
+    /* event ?*/
     CONSTRAINT PLACEMENT_EVENT_FK
         FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
