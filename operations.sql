@@ -151,19 +151,22 @@ $$  language plpgsql;
 
 CREATE OR REPLACE FUNCTION listTeamsInEvent(event_id integer)
 RETURNS TABLE(
-        team_id integer,
-        olympiad varchar(30),
-        sport integer,
-        coach integer,
-        country char(3),
-        gender olympiad_schema.team_gender_check,
-        eligible boolean
+        team_id integer
+        ---olympiad varchar(30),
+        ---sport integer,
+        --coach integer,
+       --- country char(3),
+        ---gender olympiad_schema.team_gender_check,
+        ---eligible boolean
     )
 as
 $$
-DECLARE
-    BEGIN
 
+    BEGIN
+        RETURN QUERY SELECT P.team_id
+            FROM olympic_schema.PLACEMENTS AS P
+            WHERE event_id = P.event_id;
+        
         EXCEPTION
             WHEN OTHERS THEN
                 RAISE NOTICE 'Error.';
@@ -199,7 +202,7 @@ RETURNS TABLE(
         last VARCHAR(30),
         birth_country CHAR(3),
         dob TIMESTAMP,
-        gender olympic_schem.participant_gender_check
+        gender olympic_schema.participant_gender_check
     )
 as
 $$
