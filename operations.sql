@@ -111,7 +111,6 @@ RETURNS TABLE(
     )
 as
 $$
-DECLARE
     BEGIN
 
         RETURN QUERY SELECT V.venue_name, V.capacity
@@ -138,8 +137,11 @@ RETURNS TABLE(
     )
 as
 $$
-DECLARE
     BEGIN
+
+        RETURN QUERY SELECT E.event_id, E.venue, E.olympiad_num, E.sport, E.gender, E.date
+            FROM olympic_schema.EVENT AS E
+            WHERE olympiad_id = E.olympiad;
 
         EXCEPTION
             WHEN OTHERS THEN
@@ -201,7 +203,7 @@ RETURNS TABLE(
     )
 as
 $$
-DECLARE
+---DECLARE
     BEGIN
 
         EXCEPTION
@@ -219,7 +221,7 @@ RETURNS TABLE(
     )
 as
 $$
-DECLARE
+---DECLARE
     BEGIN
 
         EXCEPTION
@@ -237,7 +239,7 @@ RETURNS TABLE(
     )
 as
 $$
-DECLARE
+---DECLARE
     BEGIN
 
         EXCEPTION
@@ -245,3 +247,10 @@ DECLARE
                 RAISE NOTICE 'Error.';
     END
 $$  language plpgsql;
+
+--- pk code
+--- declare
+---     pk
+--- select 1 + count(distinct table.pk) into pk
+    --- from table;
+--- insert ...
