@@ -189,7 +189,7 @@ $$
 
     BEGIN
         RETURN QUERY SELECT P.event_id, P.team, P.medal, P.position
-            FROM olympic_schema.PLACEMENTS AS P
+            FROM olympic_schema.PLACEMENT AS P
             WHERE event = P.event_id;
 
 
@@ -199,7 +199,7 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listParticipantsOnTeam(event_id integer)
+CREATE OR REPLACE FUNCTION listParticipantsOnTeam(team_this integer)
 RETURNS TABLE(
         participant_id SERIAL,
         account INTEGER,
@@ -214,6 +214,19 @@ as
 $$
 ---DECLARE
     BEGIN
+
+        RETURN QUERY ((SELECT P.participant_id, P.account, P.first, P.middle, P.last, P.birth_country, P.dob, P.gender
+                            FROM olympic_schema.PARTICIPANT AS P
+                            WHERE P.particpant_id = (SELECT T.coach
+                                                        FROM olympic_schema.TEAM AS T
+                                                        WHERE T.team_id = team_this))
+                        UNION
+                        (SELECT P.participant_id, P.account, P.first, P.middle, P.last, P.birth_country, P.dob, P.gender
+                            FROM olympic_schema.PARTICIPANT AS P
+                            WHERE P.participant_id IN (SELECT M.participant
+                                                       FROM olympic_schema.TEAM_MEMBERS AS M
+                                                       WHERE M.team = team_this)
+                        ));
 
         EXCEPTION
             WHEN OTHERS THEN
