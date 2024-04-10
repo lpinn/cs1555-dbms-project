@@ -252,7 +252,7 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listAthletePlacement(participant_id integer)
+CREATE OR REPLACE FUNCTION listAthletePlacement(participant integer)
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
@@ -263,6 +263,12 @@ as
 $$
 ---DECLARE
     BEGIN
+
+        RETURN QUERY SELECT P.event_id, P.team, P.medal, P.position
+            FROM olympic_schema.PLACEMENT
+            WHERE P.team IN (SELECT M.TEAM
+                                FROM olympic_schema.TEAM_MEMBERS AS M
+                                WHERE M.participant_id = participant);
 
         EXCEPTION
             WHEN OTHERS THEN
