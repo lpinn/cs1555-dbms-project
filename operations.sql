@@ -166,7 +166,7 @@ $$
         RETURN QUERY SELECT P.team_id
             FROM olympic_schema.PLACEMENTS AS P
             WHERE event_id = P.event_id;
-        
+
         EXCEPTION
             WHEN OTHERS THEN
                 RAISE NOTICE 'Error.';
@@ -175,7 +175,7 @@ $$  language plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION showPlacementsInEvent(event_id integer)
+CREATE OR REPLACE FUNCTION showPlacementsInEvent(event integer)
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
@@ -184,8 +184,14 @@ RETURNS TABLE(
     )
 as
 $$
-DECLARE
+
     BEGIN
+
+    BEGIN
+        RETURN QUERY SELECT P.event_id, P.team, P.medal, P.position
+            FROM olympic_schema.PLACEMENTS AS P
+            WHERE event = P.event_id;
+
 
         EXCEPTION
             WHEN OTHERS THEN
