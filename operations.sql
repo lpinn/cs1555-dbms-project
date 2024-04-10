@@ -103,7 +103,7 @@ $$;
 
 alter procedure disqualify_team(integer) owner to postgres;
 
-create or replace function list_venues_in_olympiad(olympiad_id integer)
+create or replace function list_venues_in_olympiad(olympiad_id varchar(30))
 
 RETURNS TABLE(
         venue_name varchar(30),
@@ -113,6 +113,13 @@ as
 $$
 DECLARE
     BEGIN
+
+        RETURN QUERY SELECT V.venue_name, V.capacity
+            FROM olympic_schema.VENUE AS V
+            WHERE V.venue_name IN (SELECT E.venue
+                                   FROM olympic_schema.EVENT as E
+                                   WHERE olympiad_id = E.olympiad
+                     );
 
         EXCEPTION                                
             WHEN OTHERS THEN                     
