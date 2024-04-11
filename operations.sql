@@ -310,3 +310,6 @@ SELECT * FROM showPlacementsInEvent(5);
 SELECT * FROM listParticipantsOnTeam(1);
 SELECT * FROM listParticipantsOnTeam(2);
 sELECT * FROM listParticipantsOnTeam(5);
+SELECT * FROM listCountryPlacementsInOlympiad('XXIV','GER');
+SELECT * FROM listCountryPlacementsInOlympiad('XXIV','AUT');
+SELECT * FROM listAthletePlacement(4);
