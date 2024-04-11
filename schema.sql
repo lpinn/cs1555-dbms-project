@@ -33,8 +33,6 @@ CREATE TABLE olympic_schema.OLYMPIAD
         PRIMARY KEY (olympiad_num),
     CONSTRAINT OLYMPIAD_COUNTRY_FK
         FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
-    CONSTRAINT LEN
-        CHECK (length(website) <= 30)
 );
 
 CREATE TABLE olympic_schema.SPORT
@@ -45,9 +43,9 @@ CREATE TABLE olympic_schema.SPORT
     team_size INTEGER NOT NULL,
     date_added TIMESTAMP,
     CONSTRAINT SPORT_PK
-        PRIMARY KEY (sport_id)
+        PRIMARY KEY (sport_id),
     CONSTRAINT VALID_SIZE
-        CHECK (team_size >= 0)
+        CHECK (team_size > 0)
 );
 
 CREATE TABLE olympic_schema.ACCOUNT
@@ -78,12 +76,7 @@ CREATE TABLE olympic_schema.PARTICIPANT
     CONSTRAINT PARTICIPANT_COUNTRY_FK
         FOREIGN KEY (birth_country) REFERENCES olympic_schema.COUNTRY(country_code),
     CONSTRAINT PARTICIPANT_ACCOUNT_FK
-        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id)
-    CONSTRAINT LEN_FIRST_NAME
-        CHECK (length(first) <= 30)
-    CONSTRAINT LEN_LAST_NAME
-        CHECK (length(last) <= 30)
-
+        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id) ON DELETE SET NULL
 );
 
 CREATE TABLE olympic_schema.TEAM
@@ -98,7 +91,7 @@ CREATE TABLE olympic_schema.TEAM
     CONSTRAINT TEAM_PK
         PRIMARY KEY (team_id),
     CONSTRAINT TEAM_PART_FK
-        FOREIGN KEY (coach) REFERENCES olympic_schema.PARTICIPANT(participant_id),
+        FOREIGN KEY (coach) REFERENCES olympic_schema.PARTICIPANT(participant_id) ON DELETE CASCADE,
     CONSTRAINT TEAM_OLYMPIAD_FK
         FOREIGN KEY (olympiad) REFERENCES olympic_schema.OLYMPIAD(olympiad_num),
     CONSTRAINT TEAM_SPORT_FK
@@ -114,7 +107,7 @@ CREATE TABLE olympic_schema.TEAM_MEMBERS
     CONSTRAINT TEAMMEM_PK
         PRIMARY KEY (team, participant),
     CONSTRAINT TM_PARTICIPANT_FK
-        FOREIGN KEY (participant) REFERENCES olympic_schema.PARTICIPANT(participant_id),
+        FOREIGN KEY (participant) REFERENCES olympic_schema.PARTICIPANT(participant_id) ON DELETE CASCADE,
     CONSTRAINT TM_TEAM_FK
         FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id)
 );
@@ -124,9 +117,9 @@ CREATE TABLE olympic_schema.VENUE
     venue_name VARCHAR(30),
     capacity INTEGER NOT NULL,
     CONSTRAINT VENUE_PK
-        PRIMARY KEY (venue_name)
+        PRIMARY KEY (venue_name),
     CONSTRAINT VALID_CAPACITY
-        CHECK (capacity >= 0)
+        CHECK (capacity > 0)
 );
 
 CREATE TABLE olympic_schema.EVENT
@@ -167,5 +160,5 @@ CREATE TABLE olympic_schema.PLACEMENT
     CONSTRAINT PLACEMENT_EVENT_FK
         FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id)
+        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id) ON DELETE CASCADE 
 );
