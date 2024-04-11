@@ -126,6 +126,30 @@ $$
     END
 $$  language plpgsql;
 
+CREATE OR REPLACE FUNCTION listEventsOfOlympiad(olympiad_id VARCHAR(30))
+RETURNS TABLE(
+        event_id integer,
+        venue varchar(30),
+        olympiad_num varchar(30),
+        sport integer,
+        gender olympic_schema.team_gender_check,
+        date timestamp
+    )
+as
+$$
+    BEGIN
+
+        RETURN QUERY SELECT E.event_id, E.venue, E.olympiad, E.sport, E.gender, E.date
+            FROM olympic_schema.EVENT AS E
+            WHERE olympiad_id = E.olympiad;
+
+        EXCEPTION
+            WHEN OTHERS THEN
+                RAISE NOTICE 'Error.';
+    END
+$$  language plpgsql;
+
+/*
 CREATE OR REPLACE FUNCTION listEventsOfOlympiad(olympiad_id integer)
 RETURNS TABLE(
         event_id integer,
@@ -148,6 +172,8 @@ $$
                 RAISE NOTICE 'Error.';
     END
 $$  language plpgsql;
+
+*/
 
 CREATE OR REPLACE FUNCTION listTeamsInEvent(event_id integer)
 RETURNS TABLE(
