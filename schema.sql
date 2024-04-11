@@ -1,5 +1,21 @@
 /* testing */
+
+DROP SCHEMA IF EXISTS olympic_schema CASCADE;
 CREATE SCHEMA olympic_schema;
+SET SCHEMA 'olympic_schema';
+
+--DROP DOMAIN IF EXISTS role_check CASCADE;
+DROP TABLE IF EXISTS ACCOUNT CASCADE;
+DROP TABLE IF EXISTS COUNTRY CASCADE;
+DROP TABLE IF EXISTS EVENT CASCADE;
+DROP TABLE IF EXISTS MEDAL CASCADE;
+DROP TABLE IF EXISTS OLYMPIAD CASCADE;
+DROP TABLE IF EXISTS PARTICIPANT CASCADE;
+DROP TABLE IF EXISTS PLACEMENT CASCADE;
+DROP TABLE IF EXISTS SPORT CASCADE;
+DROP TABLE IF EXISTS TEAM CASCADE;
+DROP TABLE IF EXISTS TEAM_MEMBERS CASCADE;
+DROP TABLE IF EXISTS VENUE CASCADE;
 
 CREATE DOMAIN role_check AS VARCHAR(12)
     CHECK (VALUE IN ('Organizer', 'Participant', 'Guest'));
@@ -23,7 +39,7 @@ CREATE TABLE olympic_schema.COUNTRY
         UNIQUE (country_name)
 );
 
-CREATE TABLE olympic_schema.OLYMPIAD
+CREATE TABLE OLYMPIAD
 (
     olympiad_num VARCHAR(30),
     city VARCHAR(30),
@@ -34,10 +50,13 @@ CREATE TABLE olympic_schema.OLYMPIAD
     CONSTRAINT OLYMPIAD_PK
         PRIMARY KEY (olympiad_num),
     CONSTRAINT OLYMPIAD_COUNTRY_FK
-        FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
+        FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code),
+    CONSTRAINT LEN
+        CHECK (length(website) <= 30)
+
 );
 
-CREATE TABLE olympic_schema.SPORT
+CREATE TABLE SPORT
 (
     sport_id INTEGER,
     sport_name VARCHAR(30),
@@ -48,7 +67,7 @@ CREATE TABLE olympic_schema.SPORT
         PRIMARY KEY (sport_id)
 );
 
-CREATE TABLE olympic_schema.ACCOUNT
+CREATE TABLE ACCOUNT
 (
     account_id SERIAL,
     username VARCHAR(30),
@@ -59,7 +78,7 @@ CREATE TABLE olympic_schema.ACCOUNT
         PRIMARY KEY (account_id)
 );
 
-CREATE TABLE olympic_schema.TEAM
+CREATE TABLE TEAM
 (
     team_id SERIAL,
     olympiad VARCHAR(30),
@@ -71,14 +90,14 @@ CREATE TABLE olympic_schema.TEAM
     CONSTRAINT TEAM_PK
         PRIMARY KEY (team_id),
     CONSTRAINT TEAM_OLYMPIAD_FK
-        FOREIGN KEY (olympiad) REFERENCES olympic_schema.OLYMPIAD(olympiad_num),
+        FOREIGN KEY (olympiad) REFERENCES OLYMPIAD(olympiad_num),
     CONSTRAINT TEAM_SPORT_FK
-        FOREIGN KEY (sport) REFERENCES olympic_schema.SPORT(sport_id),
+        FOREIGN KEY (sport) REFERENCES SPORT(sport_id),
     CONSTRAINT TEAM_COUNTRY_FK
         FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
 );
 
-CREATE TABLE olympic_schema.PARTICIPANT
+CREATE TABLE PARTICIPANT
 (
     participant_id SERIAL,
     account INTEGER,
@@ -91,22 +110,22 @@ CREATE TABLE olympic_schema.PARTICIPANT
     CONSTRAINT PARTICIPANT_PK
         PRIMARY KEY (participant_id),
     CONSTRAINT PARTICIPANT_COUNTRY_FK
-        FOREIGN KEY (birth_country) REFERENCES olympic_schema.COUNTRY(country_code),
+        FOREIGN KEY (birth_country) REFERENCES COUNTRY(country_code),
     CONSTRAINT PARTICIPANT_ACCOUNT_FK
-        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id)
+        FOREIGN KEY (account) REFERENCES ACCOUNT(account_id)
 );
 
-CREATE TABLE olympic_schema.TEAM_MEMBERS
+CREATE TABLE TEAM_MEMBERS
 (
     team INTEGER,
     participant INTEGER,
     CONSTRAINT TM_PARTICIPANT_FK
-        FOREIGN KEY (participant) REFERENCES olympic_schema.PARTICIPANT(participant_id),
+        FOREIGN KEY (participant) REFERENCES PARTICIPANT(participant_id),
     CONSTRAINT TM_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id)
+        FOREIGN KEY (team) REFERENCES TEAM(team_id)
 );
 
-CREATE TABLE olympic_schema.VENUE
+CREATE TABLE VENUE
 (
     venue_name VARCHAR(30),
     capacity INTEGER,
@@ -114,7 +133,7 @@ CREATE TABLE olympic_schema.VENUE
         PRIMARY KEY (venue_name)
 );
 
-CREATE TABLE olympic_schema.EVENT
+CREATE TABLE EVENT
 (
     event_id INTEGER,
     venue VARCHAR(30),
@@ -125,14 +144,14 @@ CREATE TABLE olympic_schema.EVENT
     CONSTRAINT EVENT_PK
         PRIMARY KEY (event_id),
     CONSTRAINT EVENT_VENUE_FK
-        FOREIGN KEY (venue) REFERENCES olympic_schema.VENUE(venue_name),
+        FOREIGN KEY (venue) REFERENCES VENUE(venue_name),
     CONSTRAINT EVENT_OLYMPIAD_FK
-        FOREIGN KEY (olympiad) REFERENCES olympic_schema.OLYMPIAD(olympiad_num),
+        FOREIGN KEY (olympiad) REFERENCES OLYMPIAD(olympiad_num),
     CONSTRAINT EVENT_SPORT_FK
-        FOREIGN KEY (sport) REFERENCES olympic_schema.SPORT(sport_id)
+        FOREIGN KEY (sport) REFERENCES SPORT(sport_id)
 );
 
-CREATE TABLE olympic_schema.MEDAL
+CREATE TABLE MEDAL
 (
     medal_id SERIAL,
     type medal_type_check,
@@ -141,17 +160,16 @@ CREATE TABLE olympic_schema.MEDAL
         PRIMARY KEY (medal_id)
 );
 
-CREATE TABLE olympic_schema.PLACEMENT
+CREATE TABLE PLACEMENT
 (
     event INTEGER,
     team INTEGER,
     medal medal_type_check,
     position INTEGER,
     CONSTRAINT PLACEMENT_PK
-        PRIMARY KEY (team),
-    /* event ?*/
+        PRIMARY KEY (event, team, position),
     CONSTRAINT PLACEMENT_EVENT_FK
-        FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
+        FOREIGN KEY (event) REFERENCES EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id)
+        FOREIGN KEY (team) REFERENCES TEAM(team_id)
 );
