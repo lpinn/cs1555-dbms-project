@@ -1,6 +1,4 @@
 /* testing */
-CREATE SCHEMA olympic_schema
-
 CREATE DOMAIN role_check AS VARCHAR(12)
     CHECK (VALUE IN ('Organizer', 'Participant', 'Guest'));
 
@@ -26,50 +24,81 @@ CREATE TABLE olympic_schema.COUNTRY
 CREATE TABLE olympic_schema.OLYMPIAD
 (
     olympiad_num VARCHAR(30),
-    city VARCHAR(30),
-    country VARCHAR(30),
-    opening_date TIMESTAMP,
-    closing_date TIMESTAMP,
+    city VARCHAR(30) NOT NULL,
+    country VARCHAR(30) NOT NULL,
+    opening_date TIMESTAMP NOT NULL,
+    closing_date TIMESTAMP NOT NULL,
     website VARCHAR(30),
     CONSTRAINT OLYMPIAD_PK
         PRIMARY KEY (olympiad_num),
     CONSTRAINT OLYMPIAD_COUNTRY_FK
         FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
+    CONSTRAINT LEN
+        CHECK (length(website) <= 30)
 );
 
 CREATE TABLE olympic_schema.SPORT
 (
     sport_id INTEGER,
-    sport_name VARCHAR(30),
+    sport_name VARCHAR(30) NOT NULL,
     description VARCHAR(30),
-    team_size INTEGER,
+    team_size INTEGER NOT NULL,
     date_added TIMESTAMP,
     CONSTRAINT SPORT_PK
         PRIMARY KEY (sport_id)
+    CONSTRAINT VALID_SIZE
+        CHECK (team_size >= 0)
 );
 
 CREATE TABLE olympic_schema.ACCOUNT
 (
     account_id SERIAL,
-    username VARCHAR(30),
-    passkey VARCHAR(30),
-    role role_check,
+    username VARCHAR(30) NOT NULL,
+    passkey VARCHAR(30) NOT NULL,
+    role role_check NOT NULL,
     last_login TIMESTAMP,
     CONSTRAINT ACCOUNT_PK
-        PRIMARY KEY (account_id)
+        PRIMARY KEY (account_id),
+    CONSTRAINT USERNAME_UN
+        UNIQUE (username)
+);
+
+CREATE TABLE olympic_schema.PARTICIPANT
+(
+    participant_id SERIAL,
+    account INTEGER,
+    first VARCHAR(30) NOT NULL,
+    middle VARCHAR(30),
+    last VARCHAR(30) NOT NULL,
+    birth_country CHAR(3) NOT NULL,
+    dob TIMESTAMP NOT NULL,
+    gender participant_gender_check,
+    CONSTRAINT PARTICIPANT_PK
+        PRIMARY KEY (participant_id),
+    CONSTRAINT PARTICIPANT_COUNTRY_FK
+        FOREIGN KEY (birth_country) REFERENCES olympic_schema.COUNTRY(country_code),
+    CONSTRAINT PARTICIPANT_ACCOUNT_FK
+        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id)
+    CONSTRAINT LEN_FIRST_NAME
+        CHECK (length(first) <= 30)
+    CONSTRAINT LEN_LAST_NAME
+        CHECK (length(last) <= 30)
+
 );
 
 CREATE TABLE olympic_schema.TEAM
 (
     team_id SERIAL,
-    olympiad VARCHAR(30),
-    sport INTEGER,
-    coach INTEGER,
-    country CHAR(3),
+    olympiad VARCHAR(30) NOT NULL,
+    sport INTEGER NOT NULL,
+    coach INTEGER NOT NULL,
+    country CHAR(3) NOT NULL,
     gender team_gender_check,
-    eligible BOOLEAN,
+    eligible BOOLEAN DEFAULT true,
     CONSTRAINT TEAM_PK
         PRIMARY KEY (team_id),
+    CONSTRAINT TEAM_PART_FK
+        FOREIGN KEY (coach) REFERENCES olympic_schema.PARTICIPANT(participant_id),
     CONSTRAINT TEAM_OLYMPIAD_FK
         FOREIGN KEY (olympiad) REFERENCES olympic_schema.OLYMPIAD(olympiad_num),
     CONSTRAINT TEAM_SPORT_FK
@@ -78,28 +107,12 @@ CREATE TABLE olympic_schema.TEAM
         FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
 );
 
-CREATE TABLE olympic_schema.PARTICIPANT
-(
-    participant_id SERIAL,
-    account INTEGER,
-    first VARCHAR(30),
-    middle VARCHAR(30),
-    last VARCHAR(30),
-    birth_country CHAR(3),
-    dob TIMESTAMP,
-    gender participant_gender_check,
-    CONSTRAINT PARTICIPANT_PK
-        PRIMARY KEY (participant_id),
-    CONSTRAINT PARTICIPANT_COUNTRY_FK
-        FOREIGN KEY (birth_country) REFERENCES olympic_schema.COUNTRY(country_code),
-    CONSTRAINT PARTICIPANT_ACCOUNT_FK
-        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id)
-);
-
 CREATE TABLE olympic_schema.TEAM_MEMBERS
 (
     team INTEGER,
     participant INTEGER,
+    CONSTRAINT TEAMMEM_PK
+        PRIMARY KEY (team, participant),
     CONSTRAINT TM_PARTICIPANT_FK
         FOREIGN KEY (participant) REFERENCES olympic_schema.PARTICIPANT(participant_id),
     CONSTRAINT TM_TEAM_FK
@@ -109,19 +122,21 @@ CREATE TABLE olympic_schema.TEAM_MEMBERS
 CREATE TABLE olympic_schema.VENUE
 (
     venue_name VARCHAR(30),
-    capacity INTEGER,
+    capacity INTEGER NOT NULL,
     CONSTRAINT VENUE_PK
         PRIMARY KEY (venue_name)
+    CONSTRAINT VALID_CAPACITY
+        CHECK (capacity >= 0)
 );
 
 CREATE TABLE olympic_schema.EVENT
 (
     event_id INTEGER,
-    venue VARCHAR(30),
-    olympiad VARCHAR(30),
-    sport INTEGER,
+    venue VARCHAR(30) NOT NULL,
+    olympiad VARCHAR(30) NOT NULL,
+    sport INTEGER NOT NULL,
     gender team_gender_check,
-    date TIMESTAMP,
+    date TIMESTAMP NOT NULL,
     CONSTRAINT EVENT_PK
         PRIMARY KEY (event_id),
     CONSTRAINT EVENT_VENUE_FK
@@ -134,7 +149,7 @@ CREATE TABLE olympic_schema.EVENT
 
 CREATE TABLE olympic_schema.MEDAL
 (
-    medal_id SERIAL,
+    medal_id INTEGER,
     type medal_type_check,
     points INTEGER,
     CONSTRAINT MEDAL_PK
