@@ -1,4 +1,4 @@
-CREATE PROCEDURE add_team_member(
+/*CREATE PROCEDURE add_team_member(
     IN team INTEGER,
     IN participant INTEGER)
 LANGUAGE plpgsql
@@ -13,9 +13,11 @@ AS $$
             RAISE NOTICE 'Error.';
     END
 $$;
+*/
+
 
 /* ddl */
-create procedure add_participant(IN account_id integer, IN first character varying, IN middle character varying, IN last character varying, IN birth_country character, IN dob timestamp without time zone, IN gender character varying)
+/*create procedure add_participant(IN account_id integer, IN first character varying, IN middle character varying, IN last character varying, IN birth_country character, IN dob timestamp without time zone, IN gender character varying)
     language plpgsql
 as
 $$
@@ -48,7 +50,7 @@ $$;
 
 alter procedure create_account(varchar, varchar, varchar) owner to postgres;
 
-
+*/
 create or replace procedure add_team_to_event(IN event integer, IN team integer)
     language plpgsql
 as
@@ -57,9 +59,9 @@ $$
         INSERT INTO olympic_schema.PLACEMENT(event, team, medal, position) VALUES(event,team, NULL, NULL);
         RAISE NOTICE 'Team added to Event successfully.';
 
-        EXCEPTION
+        /*EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE NOTICE 'Error.';*/
 
     END
 $$;
@@ -75,13 +77,15 @@ $$
         SET position = outcome_position
         WHERE team = outcome_team AND event = outcome_event;
 
-        EXCEPTION
+        /*EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE NOTICE 'Error.';*/
 
         
     END
 $$;
+
+
 
 alter procedure add_event_outcome(integer, integer, integer) owner to postgres;
 
@@ -91,8 +95,12 @@ as
 $$
     BEGIN
         UPDATE olympic_schema.PLACEMENT
-        SET position = -1
-        WHERE team = disqualify_team;
+            SET position = -1
+            WHERE team = disqualify_team;
+
+        UPDATE olympic_schema.team
+            SET eligible = FALSE
+            WHERE team_id = disqualify_team;
 
         EXCEPTION
             WHEN OTHERS THEN
@@ -149,31 +157,7 @@ $$
     END
 $$  language plpgsql;
 
-/*
-CREATE OR REPLACE FUNCTION listEventsOfOlympiad(olympiad_id integer)
-RETURNS TABLE(
-        event_id integer,
-        venue varchar(30),
-        olympiad_num varchar(30),
-        sport integer,
-        gender olympic_schema.team_gender_check,
-        date timestamp
-    )
-as
-$$
-    BEGIN
 
-        RETURN QUERY SELECT E.event_id, E.venue, E.olympiad_num, E.sport, E.gender, E.date
-            FROM olympic_schema.EVENT AS E
-            WHERE olympiad_id = E.olympiad;
-
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
-    END
-$$  language plpgsql;
-
-*/
 
 CREATE OR REPLACE FUNCTION listTeamsInEvent(event_id integer)
 RETURNS TABLE(
@@ -189,9 +173,9 @@ as
 $$
 
     BEGIN
-        RETURN QUERY SELECT P.team_id
-            FROM olympic_schema.PLACEMENTS AS P
-            WHERE event_id = P.event_id;
+        RETURN QUERY SELECT P.team
+            FROM olympic_schema.PLACEMENT AS P
+            WHERE event_id = P.event;
 
         EXCEPTION
             WHEN OTHERS THEN
@@ -201,22 +185,20 @@ $$  language plpgsql;
 
 
 
-CREATE OR REPLACE FUNCTION showPlacementsInEvent(event integer)
+CREATE OR REPLACE FUNCTION showPlacementsInEvent(event_id integer)
 RETURNS TABLE(
-        event_id INTEGER,
+        event INTEGER,
         team INTEGER,
         medal olympic_schema.medal_type_check,
-        position INTEGER
+        position_id INTEGER
     )
 as
 $$
 
     BEGIN
-
-    BEGIN
-        RETURN QUERY SELECT P.event_id, P.team, P.medal, P.position
+        RETURN QUERY SELECT P.event, P.team, P.medal, P.position
             FROM olympic_schema.PLACEMENT AS P
-            WHERE event = P.event_id;
+            WHERE event_id = P.event;
 
 
         EXCEPTION
@@ -227,7 +209,7 @@ $$  language plpgsql;
 
 CREATE OR REPLACE FUNCTION listParticipantsOnTeam(team_this integer)
 RETURNS TABLE(
-        participant_id SERIAL,
+        participant_id INTEGER,
         account INTEGER,
         first VARCHAR(30),
         middle VARCHAR(30),
@@ -243,7 +225,7 @@ $$
 
         RETURN QUERY ((SELECT P.participant_id, P.account, P.first, P.middle, P.last, P.birth_country, P.dob, P.gender
                             FROM olympic_schema.PARTICIPANT AS P
-                            WHERE P.particpant_id = (SELECT T.coach
+                            WHERE P.participant_id = (SELECT T.coach
                                                         FROM olympic_schema.TEAM AS T
                                                         WHERE T.team_id = team_this))
                         UNION
@@ -260,23 +242,23 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION showPlacementsInEvent(olympic_id varchar(30), country_id char(3))
+CREATE OR REPLACE FUNCTION listCountryPlacementsInOlympiad(olympic_id varchar(30), country_id char(3))
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
         medal olympic_schema.medal_type_check,
-        position INTEGER
+        position_id INTEGER
     )
-as
+AS
 $$
 ---DECLARE
     BEGIN
-        RETURN QUERY SELECT P.event_id, P.team, P.medal, P.position
+        RETURN QUERY SELECT P.event, P.team, P.medal, P.position
             FROM olympic_schema.PLACEMENT AS P
             WHERE P.team IN (SELECT T.team_id
                              FROM olympic_schema.TEAM AS T
                              WHERE T.country = country_id)
-                AND P.event_id IN(SELECT E.event_id
+                AND P.event IN(SELECT E.event_id
                                FROM olympic_schema.EVENT AS E
                                WHERE E.olympiad = olympic_id);
 
@@ -287,23 +269,23 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listAthletePlacement(participant integer)
+CREATE OR REPLACE FUNCTION listAthletePlacement(participant_id integer)
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
         medal olympic_schema.medal_type_check,
-        position INTEGER
+        position_id INTEGER
     )
 as
 $$
 ---DECLARE
     BEGIN
 
-        RETURN QUERY SELECT P.event_id, P.team, P.medal, P.position
-            FROM olympic_schema.PLACEMENT
+        RETURN QUERY SELECT P.event, P.team, P.medal, P.position
+            FROM olympic_schema.PLACEMENT AS P
             WHERE P.team IN (SELECT M.TEAM
                                 FROM olympic_schema.TEAM_MEMBERS AS M
-                                WHERE M.participant_id = participant);
+                                WHERE M.participant = participant_id);
 
         EXCEPTION
             WHEN OTHERS THEN
@@ -311,9 +293,20 @@ $$
     END
 $$  language plpgsql;
 
+
 --- pk code
 --- declare
 ---     pk
 --- select 1 + count(distinct table.pk) into pk
     --- from table;
 --- insert ...
+--CALL add_team_to_event(5,6);
+--CALL add_team_to_event(5,7);
+--CALL add_event_outcome(5,6,47);
+--CALL disqualify_team(6);
+
+SELECT * FROM listTeamsInEvent(5);
+SELECT * FROM showPlacementsInEvent(5);
+SELECT * FROM listParticipantsOnTeam(1);
+SELECT * FROM listParticipantsOnTeam(2);
+sELECT * FROM listParticipantsOnTeam(5);

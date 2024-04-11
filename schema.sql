@@ -29,7 +29,7 @@ CREATE DOMAIN participant_gender_check AS VARCHAR(1)
 CREATE DOMAIN medal_type_check AS VARCHAR(6)
     CHECK (VALUE IN ('Gold', 'Silver', 'Bronze'));
 
-CREATE TABLE olympic_schema.COUNTRY
+CREATE TABLE COUNTRY
 (
     country_code CHAR(3),
     country_name VARCHAR(30) NOT NULL,
@@ -167,7 +167,7 @@ CREATE TABLE PLACEMENT
     medal medal_type_check,
     position INTEGER,
     CONSTRAINT PLACEMENT_PK
-        PRIMARY KEY (event, team, position),
+        PRIMARY KEY (event, team),
     CONSTRAINT PLACEMENT_EVENT_FK
         FOREIGN KEY (event) REFERENCES EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
