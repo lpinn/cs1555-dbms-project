@@ -93,6 +93,12 @@ LANGUAGE plpgsql
 AS $$
     DECLARE
     --Using a CTE to remove participant--
+    --ON DELETE CASCADE is included in the schema but I initially implemented this operation 
+    --with a CTE. After testing, to me, it doesn't seem like DELETING the account after the 
+    --initial WITH query is causing any problems. 
+
+    --It might be redundant, however due to include different types of queries, I decided to 
+    --keep this. I understand that it would be fine to not use a CTE in this case. 
     BEGIN
         WITH participant_removal AS (
             DELETE FROM olympic_schema.participant
@@ -109,17 +115,19 @@ AS $$
     END
 $$;
 
-/* 5. */
+/* 5. - ADD TEAM MEMBER */
 CREATE OR REPLACE PROCEDURE add_team_member(
     IN team INTEGER,
     IN participant INTEGER)
 LANGUAGE plpgsql
 AS $$
     BEGIN
+        --inserting into team member 
         INSERT INTO olympic_schema.TEAM_MEMBERS(team, participant)
             VALUES(team, participant);
         RAISE NOTICE 'Team member added successfully.';
 
+    --otherwise handle exceptions 
     EXCEPTION
         WHEN OTHERS THEN
             RAISE EXCEPTION 'Generic Error: %', SQLERRM;
@@ -127,7 +135,7 @@ AS $$
     END
 $$;
 
-/* 6. */
+/* 6. - REMOVE TEAM MEMBER */
 CREATE OR REPLACE PROCEDURE olympic_schema.remove_team_member(
     IN pid INTEGER,
     IN tid INTEGER
@@ -137,10 +145,12 @@ AS $$
     DECLARE
         row_check INTEGER;
     BEGIN
+        --Deleting when the reqs match 
         DELETE FROM olympic_schema.team_members
         WHERE olympic_schema.team_members.participant = pid
             AND olympic_schema.team_members.team = tid;
 
+        --using row check to see if the row was deleted 
         GET DIAGNOSTICS row_check = ROW_COUNT;
 
         IF (row_check = 0) THEN
@@ -149,13 +159,14 @@ AS $$
             RAISE NOTICE 'Team member was removed successfully.';
         END IF;
 
+    --handling exceptions 
     EXCEPTION
         WHEN OTHERS THEN
             RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$;
 
-/* 7. */
+/* 7. - REGISTER TEAM */
 CREATE OR REPLACE PROCEDURE olympic_schema.register_team(
     IN olympiad VARCHAR(30),
     IN sport INTEGER,
@@ -166,6 +177,7 @@ CREATE OR REPLACE PROCEDURE olympic_schema.register_team(
 LANGUAGE plpgsql
 AS $$
     BEGIN
+        -- inserting values 
         INSERT INTO olympic_schema.TEAM(olympiad, sport, coach, country, gender, eligible)
             VALUES(olympiad, sport, coach, country, gender, true);
         RAISE NOTICE 'Team added successfully.';
@@ -178,7 +190,7 @@ AS $$
     END
 $$;
 
-/* 8. */
+/* 8. - ADD EVENT */
 CREATE PROCEDURE add_event(
     IN venue_id VARCHAR(30),
     IN olympiad_id VARCHAR(30),
@@ -189,6 +201,7 @@ CREATE PROCEDURE add_event(
 LANGUAGE plpgsql
 AS $$
     BEGIN
+        --inserting 
         INSERT INTO olympic_schema.EVENT(venue, olympiad, sport, gender, date)
             VALUES(venue_id, olympiad_id, sport_id, gender, date);
         RAISE NOTICE 'Event added successfully.';
@@ -210,7 +223,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 
     END
 $$;
@@ -228,9 +241,8 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 
-        
     END
 $$;
 
@@ -251,7 +263,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 
     END
 $$;
@@ -275,9 +287,9 @@ $$
                                    WHERE olympiad_id = E.olympiad
                      );
 
-        EXCEPTION                                
-            WHEN OTHERS THEN                     
-                RAISE NOTICE 'Error.';           
+        EXCEPTION
+            WHEN OTHERS THEN
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;        
     END
 $$  language plpgsql;
 
@@ -300,7 +312,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -324,7 +336,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -348,7 +360,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -383,7 +395,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -410,7 +422,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -434,6 +446,6 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
+                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
     END
 $$  language plpgsql;
