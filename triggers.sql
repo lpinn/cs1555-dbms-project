@@ -110,7 +110,8 @@ CREATE OR REPLACE TRIGGER CHECK_TEAM_GENDER
     FOR each ROW
 EXECUTE FUNCTION olympic_schema.check_gender_f();
 --------------------------------------------------------------------------------------------
-/* new triggers */
+/* checking that team sport matches event sport*/
+/* tables used - placement*/
 CREATE OR REPLACE FUNCTION olympic_schema.check_placement_sport()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -139,6 +140,10 @@ CREATE OR REPLACE TRIGGER CHECK_PLACEMENT_SPORT
     FOR each ROW
 EXECUTE FUNCTION olympic_schema.check_placement_sport();
 
+---------------------------------------------
+---------------------------------------------
+/* checks that team gender matches event gender */
+/* tables used - PLACEMENT */
 CREATE OR REPLACE FUNCTION olympic_schema.check_placement_gender()
 RETURNS TRIGGER AS $$
 DECLARE
