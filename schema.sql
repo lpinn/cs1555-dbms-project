@@ -227,20 +227,20 @@ CREATE TABLE olympic_schema.EVENT
 /*
 - Structural Constraints - specifying PRIMARY KEYS, NOT NULL
 */
-CREATE TABLE MEDAL
+CREATE TABLE olympic_schema.MEDAL
 (
     medal_id SERIAL NOT NULL,
     type medal_type_check,
     points INTEGER NOT NULL,
     CONSTRAINT MEDAL_PK
-        PRIMARY KEY (medal_id)
+        PRIMARY KEY (type)
 );
 
 /* PLACEMENT */
 /*
 - Structural Constraints - specifying PRIMARY KEYS, NOT NULL
 */
-CREATE TABLE PLACEMENT
+CREATE TABLE olympic_schema.PLACEMENT
 (
     event INTEGER,
     team INTEGER,
@@ -249,7 +249,11 @@ CREATE TABLE PLACEMENT
     CONSTRAINT PLACEMENT_PK
         PRIMARY KEY (event, team),
     CONSTRAINT PLACEMENT_EVENT_FK
-        FOREIGN KEY (event) REFERENCES EVENT(event_id),
+        FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
-        FOREIGN KEY (team) REFERENCES TEAM(team_id)
+        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id),
+    CONSTRAINT PLACEMENT_MEDAL_FK
+        FOREIGN KEY (medal) REFERENCES olympic_schema.MEDAL(type)
 );
+
+--FK IMPLICITLY APPLIED
