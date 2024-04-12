@@ -19,7 +19,11 @@ RETURNS TABLE
         )
 AS
 $$
+    DECLARE
+        interval_text text;
     BEGIN
+        interval_text := x || ' years';
+
         RETURN QUERY SELECT T1.sport_id, T1.sport_name, COUNT(T2.team) AS team_count
             FROM ((SELECT  S.sport_id, S.sport_name
                 FROM olympic_schema.SPORT AS S) AS T1
@@ -27,7 +31,7 @@ $$
                 FROM olympic_schema.EVENT AS E
                 JOIN olympic_schema.PLACEMENT AS P
                 ON P.event = E.event_id
-                /*WHERE /*current_timestamp - x * 365 > E.date*/ age(E.date) <= x */) AS T2
+                WHERE (current_timestamp- interval_text::interval) <= E.date) AS T2
             ON T1.sport_id = T2.sport)
             GROUP BY T1.sport_id, T1.sport_name
             ORDER BY team_count DESC
@@ -129,7 +133,7 @@ BEGIN
     END IF;
 
 
-    RETURN connection;
+    --RETURN connection;
 
     /*EXCEPTION
         WHEN OTHERS THEN
@@ -138,5 +142,5 @@ END
 $$ LANGUAGE plpgsql;
 
 SELECT * FROM olympic_schema.PLACEMENT;
-SELECT * FROM top_sports(1000,7);
-SELECT connected_coaches(8, 3);
+SELECT * FROM top_sports(0,9);
+--SELECT  connected_coaches(8, 3);
