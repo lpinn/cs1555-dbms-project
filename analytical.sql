@@ -41,6 +41,7 @@ $$
 
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS connected_coaches(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION connected_coaches(c1 integer, c2 integer)
 RETURNS TEXT
 AS
@@ -61,9 +62,9 @@ BEGIN
         FROM olympic_schema.TEAM AS T;
 
     CREATE VIEW C1_VIEW AS
-        SELECT DISTINCT T.coach, T.olympiad
-        FROM olympic_schema.TEAM AS T
-        WHERE T.coach = c1;
+        SELECT DISTINCT T2.coach, T2.olympiad
+        FROM olympic_schema.TEAM AS T2
+        WHERE c1= T2.coach;
 
     CREATE VIEW C2_VIEW AS
         SELECT DISTINCT T.coach, T.olympiad
@@ -80,7 +81,7 @@ BEGIN
         SELECT C1_VIEW.olympiad AS olympiad, C_TOTAL.coach AS coach
         FROM C1_VIEW JOIN C_TOTAL
             ON C1_VIEW.olympiad = C_TOTAL.olympiad
-        WHERE C1_VIEW.coach != C_TOTAL.coach;
+        WHERE C1_VIEW.coach <> C_TOTAL.coach;
 
 
      --- all coaches in years with c2 but c2
@@ -88,7 +89,7 @@ BEGIN
         SELECT C2_VIEW.olympiad AS olympiad, C_TOTAL.coach AS coach
         FROM C2_VIEW JOIN C_TOTAL
             ON C2_VIEW.olympiad = C_TOTAL.olympiad
-        WHERE C2_VIEW.coach != C_TOTAL.coach;
+        WHERE C2_VIEW.coach <> C_TOTAL.coach;
 
     CREATE VIEW C3_VIEW AS
         SELECT C1_PLUS.olympiad AS c1_olympiad, C2_PLUS.olympiad AS c2_olympiad, C1_PlUS.coach AS c3_coach
@@ -136,4 +137,4 @@ $$ LANGUAGE plpgsql;
 
 SELECT * FROM olympic_schema.PLACEMENT;
 SELECT * FROM top_sports(1000,7);
-SELECT * FROM connected_coaches(3,8);
+SELECT connected_coaches(3,8);
