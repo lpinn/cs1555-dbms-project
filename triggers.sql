@@ -119,11 +119,11 @@ DECLARE
     event_sport integer;
 BEGIN
     SELECT sport INTO team_sport
-    FROM TEAM T
+    FROM olympic_schema.TEAM T
     WHERE T.team_id = new.team;
 
     SELECT sport INTO event_sport
-    FROM EVENT E
+    FROM olympic_schema.EVENT E
     WHERE E.event_id = new.event;
 
     IF(team_sport <> event_sport) THEN
@@ -151,11 +151,11 @@ DECLARE
     event_gender char(1);
 BEGIN
     SELECT gender INTO team_gender
-    FROM TEAM T
+    FROM olympic_schema.TEAM T
     WHERE T.team_id = new.team;
 
     SELECT gender INTO event_gender
-    FROM EVENT E
+    FROM olympic_schema.EVENT E
     WHERE E.event_id = new.event;
 
     IF(team_gender <> event_gender AND team_gender <> 'X') THEN
