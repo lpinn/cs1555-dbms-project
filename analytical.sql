@@ -44,6 +44,8 @@ AS
 $$
 DECLARE
     connection text;
+    c3 integer;
+    c4 integer;
 BEGIN
     IF(c1 = c2) THEN
         connection := c1 + '= ' + c2;
@@ -87,11 +89,12 @@ BEGIN
 
     CREATE VIEW C3 AS
         SELECT C1_PLUS.olympiad, C2_PLUS.olympiad, C1_PlUS.coach
+        SELECT C1_PLUS.olympiad AS c1_olympiad, C2_PLUS.olympiad AS c2_olympiad, C1_PlUS.coach AS c3_coach
         FROM C1_PLUS JOIN C2_PLUS
             ON C1_PLUS.coach = C2_PLUS.coach;
 
     CREATE VIEW C4 AS
-        SELECT C1_PLUS.olympiad, C1_PLUS.coach, C2_PLUS.coach
+        SELECT C1_PLUS.olympiad AS olympiad, C1_PLUS.coach AS c3_coach, C2_PLUS.coach AS c4_coach
         FROM C1_PLUS JOIN C2_PLUS
             ON C1_PLUS.olympiad = C2_PLUS.olympiad;
 
@@ -99,7 +102,22 @@ BEGIN
     IF((SELECT count(*) FROM C1_TO_C2) > 0) THEN
         connection:= c1 + 'to' + c2;
         RETURN connection;
-    ELSIF
+    ELSIF((SELECT count(*) FROM C3 ) > 0) THEN
+        SELECT c3_coach AS c3
+            FROM C3
+            LIMIT 1;
+        connection := c1 + 'to' + c3 + 'to' + c2;
+        RETURN connection;
+    ELSIF((SELECT count(*) FROM C4 ) > 0) THEN
+        SELECT c3_coach AS c3
+            FROM C4
+            LIMIT 1;
+        SELECT c4_coach AS c4
+            FROM C4
+            LIMIT 1;
+        connection := c1 +'to'+ c3 + 'to' + c4 + 'to' + c2;
+    ELSE
+        connection := 'no path found';
 
     END IF;
 
@@ -109,5 +127,5 @@ BEGIN
     EXCEPTION
         WHEN OTHERS THEN
             RAISE NOTICE 'Error.';
-END;
+END
 $$ LANGUAGE plpgsql;
