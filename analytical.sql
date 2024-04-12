@@ -42,10 +42,72 @@ CREATE OR REPLACE FUNCTION connected_coaches(c1 integer, c2 integer)
 RETURNS TEXT
 AS
 $$
-    BEGIN
+DECLARE
+    connection text;
+BEGIN
+    IF(c1 = c2) THEN
+        connection := c1 + '= ' + c2;
+        RETURN connection;
+    end if;
 
-        EXCEPTION
-            WHEN OTHERS THEN
-                RAISE NOTICE 'Error.';
-    END;
+    --- all coaches and olympiads
+    CREATE VIEW C_TOTAL AS
+        SELECT DISTINCT T.coach, T.olympiad
+        FROM olympic_schema.TEAM AS T;
+
+    CREATE VIEW C1 AS
+        SELECT DISTINCT T.coach, T.olympiad
+        FROM olympic_schema.TEAM AS T
+        WHERE T.coach = c1;
+
+    CREATE VIEW C2 AS
+        SELECT DISTINCT T.coach, T.olympiad
+        FROM olympic_schema.TEAM AS T
+        WHERE T.coach = c2;
+
+    CREATE VIEW C1_TO_C2 AS
+        SELECT *
+        FROM C1 JOIN C2
+            ON C1.olympiad = C2.olympiad;
+
+     --- all coaches in years with c1 but c1
+    CREATE VIEW C1_PLUS AS
+        SELECT C1.olympiad AS olympiad, C_TOTAL.coach AS coach
+        FROM C1 JOIN C_TOTAL
+            ON C1.olympiad = C_TOTAL.olympiad
+        WHERE C1.coach != C_TOTAL.coach;
+
+
+     --- all coaches in years with c2 but c2
+    CREATE VIEW C2_PLUS AS
+        SELECT C2.olympiad AS olympiad, C_TOTAL.coach AS coach
+        FROM C2 JOIN C_TOTAL
+            ON C2.olympiad = C_TOTAL.olympiad
+        WHERE C2.coach != C_TOTAL.coach;
+
+    CREATE VIEW C3 AS
+        SELECT C1_PLUS.olympiad, C2_PLUS.olympiad, C1_PlUS.coach
+        FROM C1_PLUS JOIN C2_PLUS
+            ON C1_PLUS.coach = C2_PLUS.coach;
+
+    CREATE VIEW C4 AS
+        SELECT C1_PLUS.olympiad, C1_PLUS.coach, C2_PLUS.coach
+        FROM C1_PLUS JOIN C2_PLUS
+            ON C1_PLUS.olympiad = C2_PLUS.olympiad;
+
+
+    IF((SELECT count(*) FROM C1_TO_C2) > 0) THEN
+        connection:= c1 + 'to' + c2;
+        RETURN connection;
+    ELSIF
+
+    END IF;
+
+
+
+
+    EXCEPTION
+        WHEN OTHERS THEN
+            RAISE NOTICE 'Error.';
+END;
 $$ LANGUAGE plpgsql;
