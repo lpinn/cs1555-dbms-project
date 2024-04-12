@@ -62,6 +62,11 @@ BEGIN
         RETURN connection;
     END IF;
 
+    /*CREATE OR REPLACE TABLE C_INPUT(
+        c1 integer,
+        c2 integer;
+     );   */
+
     --- all coaches and olympiads
     CREATE OR REPLACE VIEW C_TOTAL AS
         SELECT DISTINCT T.coach, T.olympiad
@@ -70,15 +75,15 @@ BEGIN
     CREATE OR REPLACE VIEW C1_VIEW AS
         SELECT DISTINCT T1.coach, T1.olympiad
         FROM olympic_schema.TEAM AS T1
-        WHERE T1.coach = c1;
+        WHERE T1.coach = c1::INTEGER;
 
     CREATE OR REPLACE VIEW C2_VIEW AS
         SELECT DISTINCT T2.coach, T2.olympiad
         FROM olympic_schema.TEAM AS T2
-        WHERE T2.coach = c2;
+        WHERE T2.coach = c2::INTEGER;
 
     CREATE OR REPLACE VIEW C1_TO_C2 AS
-        SELECT
+        SELECT *
         FROM C1_VIEW JOIN C2_VIEW
             ON C1_VIEW.olympiad = C2_VIEW.olympiad;
 
@@ -143,4 +148,4 @@ $$ LANGUAGE plpgsql;
 
 SELECT * FROM olympic_schema.PLACEMENT;
 SELECT * FROM top_sports(0,9);
---SELECT  connected_coaches(8, 3);
+SELECT  connected_coaches(8, 3);
