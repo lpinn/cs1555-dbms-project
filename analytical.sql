@@ -209,6 +209,3 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-SELECT * FROM olympic_schema.PLACEMENT;
-SELECT * FROM top_sports(0,9);
-SELECT  connected_coaches(8, 3);
