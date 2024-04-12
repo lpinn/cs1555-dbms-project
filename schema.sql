@@ -1,4 +1,21 @@
-/* testing */
+DROP SCHEMA IF EXISTS olympic_schema CASCADE;
+CREATE SCHEMA olympic_schema;
+SET SCHEMA 'olympic_schema';
+
+--DROP DOMAIN IF EXISTS role_check CASCADE;
+DROP TABLE IF EXISTS ACCOUNT CASCADE;
+DROP TABLE IF EXISTS COUNTRY CASCADE;
+DROP TABLE IF EXISTS EVENT CASCADE;
+DROP TABLE IF EXISTS MEDAL CASCADE;
+DROP TABLE IF EXISTS OLYMPIAD CASCADE;
+DROP TABLE IF EXISTS PARTICIPANT CASCADE;
+DROP TABLE IF EXISTS PLACEMENT CASCADE;
+DROP TABLE IF EXISTS SPORT CASCADE;
+DROP TABLE IF EXISTS TEAM CASCADE;
+DROP TABLE IF EXISTS TEAM_MEMBERS CASCADE;
+DROP TABLE IF EXISTS VENUE CASCADE;
+
+/* DOMAINS */ 
 CREATE DOMAIN role_check AS VARCHAR(12)
     CHECK (VALUE IN ('Organizer', 'Participant', 'Guest'));
 
@@ -11,6 +28,8 @@ CREATE DOMAIN participant_gender_check AS VARCHAR(1)
 CREATE DOMAIN medal_type_check AS VARCHAR(6)
     CHECK (VALUE IN ('Gold', 'Silver', 'Bronze'));
 
+/* COUNTRY */
+-- Structural Constraints - specifying PRIMARY KEYS, NOT NULL, UNIQUE CONSTRAINT 
 CREATE TABLE olympic_schema.COUNTRY
 (
     country_code CHAR(3),
@@ -21,6 +40,15 @@ CREATE TABLE olympic_schema.COUNTRY
         UNIQUE (country_name)
 );
 
+/* OLYMPIAD */
+/*
+We're not requiring that Website be specified, it can be null
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+- Semantic Constraints - checking if website is a valid website in case it's NOT NULL
+- Referential Triggering Constraints - specifying FOREIGN KEY 
+    - We're assuming that a country from the COUNTRY table will 
+      not be deleted 
+*/ 
 CREATE TABLE olympic_schema.OLYMPIAD
 (
     olympiad_num VARCHAR(30),
@@ -32,22 +60,36 @@ CREATE TABLE olympic_schema.OLYMPIAD
     CONSTRAINT OLYMPIAD_PK
         PRIMARY KEY (olympiad_num),
     CONSTRAINT OLYMPIAD_COUNTRY_FK
-        FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
+        FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code),
+    CONSTRAINT VALID_WEBSITE
+        CHECK ((LIKE '%https://') AND (website IS NOT NULL))
 );
 
+/* SPORT */
+/*
+We're not requiring that a Description be specified, it can be null
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+- Semantic Constraints - checking if team size is greater than 0 
+*/ 
 CREATE TABLE olympic_schema.SPORT
 (
     sport_id INTEGER,
     sport_name VARCHAR(30) NOT NULL,
     description VARCHAR(30),
     team_size INTEGER NOT NULL,
-    date_added TIMESTAMP,
+    date_added TIMESTAMP NOT NULL,
     CONSTRAINT SPORT_PK
         PRIMARY KEY (sport_id),
     CONSTRAINT VALID_SIZE
         CHECK (team_size > 0)
 );
 
+/* ACCOUNT */
+/*
+We're setting last_login in the create_account operation 
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL, UNIQUE CONSTRAINT 
+- Semantic Constraints - calling domain check on role (role_check)
+*/ 
 CREATE TABLE olympic_schema.ACCOUNT
 (
     account_id SERIAL,
@@ -61,10 +103,19 @@ CREATE TABLE olympic_schema.ACCOUNT
         UNIQUE (username)
 );
 
+/* PARTICIPANT */
+/*
+We're not requiring that a Middle Initial be specified, it can be null
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+- Semantic Constraints - calling domain check on gender (participant_gender_check)
+- Referential Triggering Constraints - specifying FOREIGN KEY for birth_country and account
+    - We're assuming that a country from the COUNTRY table will not be deleted,
+    - so that's why we're only handling when an account from ACCOUNT is deleted using SET NULL 
+*/ 
 CREATE TABLE olympic_schema.PARTICIPANT
 (
     participant_id SERIAL,
-    account INTEGER,
+    account INTEGER NOT NULL,
     first VARCHAR(30) NOT NULL,
     middle VARCHAR(30),
     last VARCHAR(30) NOT NULL,
@@ -79,6 +130,16 @@ CREATE TABLE olympic_schema.PARTICIPANT
         FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id) ON DELETE SET NULL
 );
 
+/* TEAM */
+/*
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL, setting DEFAULT
+- Semantic Constraints - calling domain check on gender (team_gender_check)
+- Referential Triggering Constraints - specifying FOREIGN KEY for coach, olympiad, sport, and country
+    - We're assuming that a country from the COUNTRY table will not be deleted
+    - When a coach (participant) is deleted from PARTICIPANT then we delete cascade 
+    - We're assuming that a sport will not be deleted 
+    - We're assuming that an olympiad will not be deleted 
+*/ 
 CREATE TABLE olympic_schema.TEAM
 (
     team_id SERIAL,
@@ -100,6 +161,13 @@ CREATE TABLE olympic_schema.TEAM
         FOREIGN KEY (country) REFERENCES olympic_schema.COUNTRY(country_code)
 );
 
+/* TEAM MEMBER */
+/*
+- Structural Constraints - specifying PRIMARY KEYS
+- Referential Triggering Constraints - specifying FOREIGN KEY for team, participant
+    - When a team is deleted from TEAM we delete cascade
+    - When a participant is deleted from PARTICIPANT then we delete cascade 
+*/ 
 CREATE TABLE olympic_schema.TEAM_MEMBERS
 (
     team INTEGER,
@@ -109,9 +177,14 @@ CREATE TABLE olympic_schema.TEAM_MEMBERS
     CONSTRAINT TM_PARTICIPANT_FK
         FOREIGN KEY (participant) REFERENCES olympic_schema.PARTICIPANT(participant_id) ON DELETE CASCADE,
     CONSTRAINT TM_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id)
+        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id) ON DELETE CASCADE,
 );
 
+/* VENUE */
+/*
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+- Semantic Constraints - checking if team size is greater than 0 
+*/ 
 CREATE TABLE olympic_schema.VENUE
 (
     venue_name VARCHAR(30),
@@ -122,6 +195,16 @@ CREATE TABLE olympic_schema.VENUE
         CHECK (capacity > 0)
 );
 
+/* EVENT */
+/*
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+- Semantic Constraints - calling domain check on gender (team_gender_check)
+- Referential Triggering Constraints - specifying FOREIGN KEY for venu, olympiad, sport 
+    - We're assuming that a country from the COUNTRY table will not be deleted
+    - When an olympiad is deleted from OLYMPIAD, we don't do anything 
+    - When a venue is deleted from VENUE, we delete the venue 
+    - When a sport is deleted from SPORT, we don't do anything 
+*/ 
 CREATE TABLE olympic_schema.EVENT
 (
     event_id INTEGER,
@@ -133,32 +216,40 @@ CREATE TABLE olympic_schema.EVENT
     CONSTRAINT EVENT_PK
         PRIMARY KEY (event_id),
     CONSTRAINT EVENT_VENUE_FK
-        FOREIGN KEY (venue) REFERENCES olympic_schema.VENUE(venue_name),
+        FOREIGN KEY (venue) REFERENCES olympic_schema.VENUE(venue_name) ON DELETE CASCADE,
     CONSTRAINT EVENT_OLYMPIAD_FK
         FOREIGN KEY (olympiad) REFERENCES olympic_schema.OLYMPIAD(olympiad_num),
     CONSTRAINT EVENT_SPORT_FK
         FOREIGN KEY (sport) REFERENCES olympic_schema.SPORT(sport_id)
 );
 
-CREATE TABLE olympic_schema.MEDAL
+/* MEDAL */
+/*
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+*/
+CREATE TABLE MEDAL
 (
-    medal_id INTEGER,
+    medal_id SERIAL NOT NULL,
     type medal_type_check,
-    points INTEGER,
+    points INTEGER NOT NULL,
     CONSTRAINT MEDAL_PK
         PRIMARY KEY (medal_id)
 );
 
-CREATE TABLE olympic_schema.PLACEMENT
+/* PLACEMENT */
+/*
+- Structural Constraints - specifying PRIMARY KEYS, NOT NULL
+*/
+CREATE TABLE PLACEMENT
 (
     event INTEGER,
     team INTEGER,
     medal medal_type_check,
     position INTEGER,
     CONSTRAINT PLACEMENT_PK
-        PRIMARY KEY (team),
+        PRIMARY KEY (event, team),
     CONSTRAINT PLACEMENT_EVENT_FK
-        FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
+        FOREIGN KEY (event) REFERENCES EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id) ON DELETE CASCADE 
+        FOREIGN KEY (team) REFERENCES TEAM(team_id)
 );
