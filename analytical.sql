@@ -106,8 +106,8 @@ $$
     END;
 
 $$ LANGUAGE plpgsql;
-
---This one is incomplete - could not test 
+-----------------------------------------------
+/* We used a non-recursive method using multiple views to save queries. First, we checked to make sure the coaches were not the same, then we check to see if they are in same Olympiad. We then look for a single coach who is in an Olympiad with both coaches, and finally we look for two coaches who are in the same olympiad, who each are in an Olympiad with one of the original coaches. NOTE: We had some difficulty with the parameters and tested by directly inserting values where C1 and c2 are in c1_view and c2_view. */
 DROP FUNCTION IF EXISTS connected_coaches(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION connected_coaches(c1 integer, c2 integer)
 RETURNS TEXT
