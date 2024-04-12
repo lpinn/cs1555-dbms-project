@@ -1,4 +1,4 @@
-/* setting medals and stuff */ 
+/* setting medals and stuff */
 CREATE OR REPLACE FUNCTION olympic_schema.set_placement()
 RETURNS trigger AS $$
 BEGIN
@@ -8,7 +8,7 @@ BEGIN
         new.medal = 'Silver';
     elsif(new.position = 3) then
         new.medal = 'Bronze';
-    else 
+    else
         new.medal = NULL;
     end if;
 
@@ -16,7 +16,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER ASSIGN_MEDAL
+CREATE OR REPLACE TRIGGER ASSIGN_MEDAL
     BEFORE INSERT OR UPDATE
     ON olympic_schema.placement
     FOR EACH ROW
@@ -53,10 +53,12 @@ DECLARE
                   AND event = event_id;
             END IF;
         END LOOP;
+        CLOSE pl_cursor;
+        RETURN NEW;
     END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER TEAM_DISQUALIFIED
+CREATE OR REPLACE TRIGGER TEAM_DISQUALIFIED
     BEFORE INSERT OR UPDATE
     ON olympic_schema.team
     FOR EACH ROW
@@ -85,14 +87,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER CHECK_TEAM_GENDER
+CREATE OR REPLACE TRIGGER CHECK_TEAM_GENDER
     BEFORE INSERT OR UPDATE
     ON olympic_schema.team_members
     FOR each ROW
 EXECUTE FUNCTION olympic_schema.check_gender_f();
 
-/* new triggers */ 
-CREATE FUNCTION check_placement_sport()
+/* new triggers */
+CREATE OR REPLACE FUNCTION olympic_schema.check_placement_sport()
 RETURNS TRIGGER AS $$
 DECLARE
     team_sport integer;
@@ -114,13 +116,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER CHECK_PLACEMENT_SPORT
+CREATE OR REPLACE TRIGGER CHECK_PLACEMENT_SPORT
     BEFORE INSERT OR UPDATE
-    ON PLACEMENT
+    ON olympic_schema.PLACEMENT
     FOR each ROW
-EXECUTE FUNCTION check_placement_sport();
+EXECUTE FUNCTION olympic_schema.check_placement_sport();
 
-CREATE FUNCTION check_placement_gender()
+CREATE OR REPLACE FUNCTION olympic_schema.check_placement_gender()
 RETURNS TRIGGER AS $$
 DECLARE
     team_gender char(1);
@@ -142,8 +144,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER CHECK_PLACEMENT_GENDER
+CREATE OR REPLACE TRIGGER CHECK_PLACEMENT_GENDER
     BEFORE INSERT OR UPDATE
-    ON PLACEMENT
+    ON olympic_schema.PLACEMENT
     FOR each ROW
-EXECUTE FUNCTION check_placement_gender();
+EXECUTE FUNCTION olympic_schema.check_placement_gender();
