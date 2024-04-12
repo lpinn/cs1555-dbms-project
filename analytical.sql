@@ -88,7 +88,6 @@ BEGIN
         WHERE C2.coach != C_TOTAL.coach;
 
     CREATE VIEW C3 AS
-        SELECT C1_PLUS.olympiad, C2_PLUS.olympiad, C1_PlUS.coach
         SELECT C1_PLUS.olympiad AS c1_olympiad, C2_PLUS.olympiad AS c2_olympiad, C1_PlUS.coach AS c3_coach
         FROM C1_PLUS JOIN C2_PLUS
             ON C1_PLUS.coach = C2_PLUS.coach;
