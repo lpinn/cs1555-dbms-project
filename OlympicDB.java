@@ -6,10 +6,13 @@ import java.util.Scanner;
  * databaseConnectionConfig and helper methods originally writteb by Brian Nixon (TA CS 1555)
  */
 public class OlympicDB{
+
     public void main(String args[]){
         System.out.println("Welcome to OlympicDB!");
 
     }
+
+    //private Connection dbcon; 
     private String user = "postgres";
     private String pass = "";
     private static final String USER_REQUEST_STR = "Enter the username for connecting to the database: ";
@@ -59,5 +62,6 @@ public class OlympicDB{
         if (pw != null)
             this.pass = pw;
     }
+
 
 }
