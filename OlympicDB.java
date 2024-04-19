@@ -1,27 +1,72 @@
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.sql.*;
+import java.util.Properties;
 
-
-/*
- * databaseConnectionConfig and helper methods originally writteb by Brian Nixon (TA CS 1555)
- */
-public class OlympicDB{
-
-    public void main(String args[]){
-        System.out.println("Welcome to OlympicDB!");
-
-    }
-
-    //private Connection dbcon; 
+public class OlympicDB {
     private String user = "postgres";
-    private String pass = "";
+    private String pass = "cowcow2024";
     private static final String USER_REQUEST_STR = "Enter the username for connecting to the database: ";
     private static final String PASS_REQUEST_STR = "Enter the password for connecting to the database: ";
 
-    public void DatabaseConnectionConfig() {
-        // Note scanner is passed as an arg to close after
-        // If scanner is closed in the method, System.in is also closed causing the second method call to fail
-        // *Fun* little java quirks
+    public static void main(String[] args) {
+        boolean contMenuLoop = true;
+        // Ensure that the JDBC driver library is correctly loaded in
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException err) {
+            System.err.println("Unable to detect the JDBC .jar dependency. Check that the library is correctly loaded in and try again.");
+            System.exit(-1);
+        }
+
+        OlympicDB inputConfig = new OlympicDB();
+
+        String url = "jdbc:postgresql://localhost:5432/";
+        Properties props = new Properties();
+        props.setProperty("user", inputConfig.getUser());
+        props.setProperty("password", inputConfig.getPass());
+
+        do {
+            
+        } while(true); 
+
+        // Utilize Java try-with-resources to automatically close the connection and statement
+        try (Connection conn = DriverManager.getConnection(url, props);
+            Statement st = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+            // Set the Connection's default schema to match our .sql file
+            conn.setSchema("olympic_schema");
+            ResultSet resultSet = st.executeQuery("SELECT * FROM MEDAL");
+
+            int medal_id;
+            String type;
+            int points;
+
+            while(resultSet.next()){
+                medal_id = resultSet.getInt("medal_id");
+                type = resultSet.getString("type");
+                points = resultSet.getInt("points");
+
+                System.out.println(medal_id + " " + type + " " + points); 
+            }    
+
+            resultSet.close();
+            st.close();
+            conn.close();
+        } catch (SQLException e1) {
+            // JDBC will throw a SQLException if errors occur on the database
+            System.err.println("SQL Error");
+
+            // Note that this returns an iterable of errors
+            while (e1 != null) {
+                System.err.println("Message = " + e1.getMessage());
+                System.err.println("SQLState = " + e1.getSQLState());
+                System.err.println("SQL Code = " + e1.getErrorCode());
+                e1 = e1.getNextException();
+            }
+        }
+    }
+
+    public OlympicDB() {
         Scanner scanner = new Scanner(System.in);
         requestUsername(scanner);
         requestPassword(scanner);
@@ -51,17 +96,14 @@ public class OlympicDB{
 
     private void requestUsername(Scanner scanner ) {
         String username = requestUserInput(USER_REQUEST_STR, scanner);
-        // If username is null, don't update the current value
         if (username != null)
             this.user = username;
     }
 
     private void requestPassword(Scanner scanner ) {
         String pw = requestUserInput(PASS_REQUEST_STR, scanner);
-        // If password is null, don't update the current value
         if (pw != null)
             this.pass = pw;
     }
-
 
 }
