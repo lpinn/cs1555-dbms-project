@@ -12,8 +12,10 @@ public class OlympicDB {
     private ArrayList<String> options_list = new ArrayList<String>(); 
     public static void main(String[] args) throws ClassNotFoundException {
         String choice = "";
+        int op_choice = 0;
         Scanner sc = new Scanner(System.in); 
         OlympicDB od = new OlympicDB(sc);
+        String mo = od.menuOptions(); 
 
         od.loadJDBC(); 
         od.setDbInfo(sc);
@@ -39,29 +41,35 @@ public class OlympicDB {
                 if(choice.equals("1")){
                     od.contMenuLoop = true;
                     int num = 0; 
-                    System.out.println("Which operation would you like to perform? Please choose a valid operation or press q to quit."); 
-                    do { 
-                        choice = sc.nextLine(); 
-                        num = Integer.parseInt(choice); 
-                        if(num <= od.options_list.size()){
-                            od.contMenuLoop = false;                    
-                        } else if
+                    do {
+                        System.out.println("Which operation would you like to perform? Please choose a valid operation or press any number that isn't associated with an operation to quit."); 
+
+                        op_choice = sc.nextInt(); 
+                        if(op_choice == -1 || op_choice > od.options_list.size()){
+                            od.contMenuLoop = false;
+                        }
+
+                        switch (op_choice) {
+                            case 1:
+                                CallableStatement properCase = conn.prepareCall("{ ? = call create_account( ? ) }"); 
+                                /*
+                                Boolean rReturn;
+                                properCase.registerOutParameter(1, Types.BIT);
+                                properCase.setString(2, "111222333");
+                                properCase.execute();
+                                rReturn = properCase.getBoolean(1);
+                                System.out.println(rReturn);
+                                 */
+                            default:
+                                break;
+                        }
                     } while (od.contMenuLoop); 
 
                 } else if (choice.equals("2")){
                     od.contMenuLoop = true;
-                    od.menuOptions(); 
+                    System.out.println(mo);
                 } 
 
-                /*
-                CallableStatement properCase = conn.prepareCall("{ ? = call can_pay_loan( ? ) }"); 
-                Boolean rReturn;
-                properCase.registerOutParameter(1, Types.BIT);
-                properCase.setString(2, "111222333");
-                properCase.execute();
-                rReturn = properCase.getBoolean(1);
-                System.out.println(rReturn);
-                */
             } while (od.contMenuLoop);
             
         } catch (SQLException err) {
