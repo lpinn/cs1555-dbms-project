@@ -2,12 +2,16 @@ import java.util.Properties;
 import java.sql.*;
 import java.util.Scanner;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
 public class OlympicDB {
     private Scanner sc = new Scanner(System.in); 
     private String user = "postgres"; 
     private String pass = "cowcow24"; 
+    private boolean contMenuLoop = true; 
+    private ArrayList<String> options_list = new ArrayList<String>(); 
     public static void main(String[] args) throws ClassNotFoundException {
+        String choice = "";
         Scanner sc = new Scanner(System.in); 
         OlympicDB od = new OlympicDB(sc);
 
@@ -19,12 +23,47 @@ public class OlympicDB {
         props.setProperty("user", od.getUser());
         props.setProperty("password", od.getPass());
 
-        // Java try-with-resources automatically closes the connection and callable statement
+        System.out.println("Welcome to the Olympic DB, how may we help you?"); 
+
         try (Connection conn = DriverManager.getConnection(url, props)){
-             //CallableStatement properCase = conn.prepareCall("{ ? = call ( ? ) }")) {
-            // Set the Connection's default schema to match our .sql file
-            conn.setSchema("olympic_schema");
-            //calling a function with return value
+            conn.setSchema("recitation");
+            do {
+                System.out.println("Press 1 for Database search, 2 for menu options, or any other key to quit");
+                do { 
+                    choice = sc.nextLine(); 
+                    if(!choice.equals("1") || !choice.equals("2")){
+                        od.contMenuLoop = false;                    
+                    }
+                } while (od.contMenuLoop); 
+            
+                if(choice.equals("1")){
+                    od.contMenuLoop = true;
+                    int num = 0; 
+                    System.out.println("Which operation would you like to perform? Please choose a valid operation or press q to quit."); 
+                    do { 
+                        choice = sc.nextLine(); 
+                        num = Integer.parseInt(choice); 
+                        if(num <= od.options_list.size()){
+                            od.contMenuLoop = false;                    
+                        } else if
+                    } while (od.contMenuLoop); 
+
+                } else if (choice.equals("2")){
+                    od.contMenuLoop = true;
+                    od.menuOptions(); 
+                } 
+
+                /*
+                CallableStatement properCase = conn.prepareCall("{ ? = call can_pay_loan( ? ) }"); 
+                Boolean rReturn;
+                properCase.registerOutParameter(1, Types.BIT);
+                properCase.setString(2, "111222333");
+                properCase.execute();
+                rReturn = properCase.getBoolean(1);
+                System.out.println(rReturn);
+                */
+            } while (od.contMenuLoop);
+            
         } catch (SQLException err) {
             System.out.println("SQL Error");
             while (err != null) {
@@ -74,5 +113,13 @@ public class OlympicDB {
         }
         return null; 
     } 
+
+    public String menuOptions() {
+        StringBuilder options = new StringBuilder(); 
+        options.append("1. Can pay loan \n"); 
+        options_list.add("1. Can pay loan \n"); 
+
+        return options.toString(); 
+    }
 
 }
