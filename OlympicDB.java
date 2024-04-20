@@ -4,35 +4,44 @@ import java.util.Scanner;
 import java.util.concurrent.Callable;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class OlympicDB {
-    private Scanner sc = new Scanner(System.in); 
     private String user = "postgres"; 
     private String pass = "cowcow24"; 
     private boolean contMenuLoop = true; 
-    private ArrayList<String> options_list = new ArrayList<String>(); 
+    private ArrayList<String> options_list = new ArrayList<String>();
+    private BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+ 
     public static void main(String[] args) throws ClassNotFoundException {
         String choice = "";
         int op_choice = 0;
-        Scanner sc = new Scanner(System.in); 
-        OlympicDB od = new OlympicDB(sc);
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        OlympicDB od = new OlympicDB(br);
         String mo = od.menuOptions(); 
 
         od.loadJDBC(); 
-        od.setDbInfo(sc);
+        od.setDbInfo(br);
 
         String url = "jdbc:postgresql://localhost:5432/";
         Properties props = new Properties();
         props.setProperty("user", od.getUser());
         props.setProperty("password", od.getPass());
-        props.setProperty("escapeSyntaxCallMode", "callIfNoReturn");
+        //props.setProperty("escapeSyntaxCallMode", "callIfNoReturn");
 
         System.out.println("Welcome to the Olympic DB, how may we help you?"); 
 
             do {
                 System.out.println("Press 1 for Database search, 2 for menu options, or any other key to quit");
                 do { 
-                    choice = sc.nextLine(); 
+                    try {
+                        choice = od.br.readLine();
+                    } catch (IOException e){
+                        System.err.println("IOException");
+                    }
                     if(!choice.equals("1") || !choice.equals("2")){
                         od.contMenuLoop = false;                    
                     }
@@ -44,7 +53,12 @@ public class OlympicDB {
                     do {
                         System.out.println("Which operation would you like to perform? Please choose a valid operation or press any number that isn't associated with an operation to quit."); 
 
-                        op_choice = sc.nextInt(); 
+                        try {
+                            choice = od.br.readLine();
+                            op_choice = Integer.parseInt(choice);
+                        } catch (IOException e){
+                            System.err.println("IOException");
+                        }
                         if(op_choice == -1 || op_choice > od.options_list.size()){
                             od.contMenuLoop = false;
                         }
@@ -52,16 +66,27 @@ public class OlympicDB {
                         switch (op_choice) {
                             case 1:
                                 try (Connection conn = DriverManager.getConnection(url, props);
-                                 CallableStatement properCase = conn.prepareCall("{ CALL create_account( ?, ?, ? ) }")){
+                                 CallableStatement properCase = conn.prepareCall("{ ? = CALL create_account( ?, ?, ? ) }")){
                                     conn.setSchema("olympic_schema");
 
-                                    properCase.setString(1, "urmom");
-                                    properCase.setString(2, "hi");
-                                    properCase.setString(3, "Participant");
+                                    od.callCreateAccount(properCase);
 
-                                    properCase.execute();
+                                } catch (SQLException err) {
+                                    System.out.println("SQL Error");
+                                    while (err != null) {
+                                        System.out.println("Message = " + err.getMessage());
+                                        System.out.println("SQLState = " + err.getSQLState());
+                                        System.out.println("SQL Code = " + err.getErrorCode());
+                                        err = err.getNextException();
+                                    }
+                                }
+                            case 2:
+                                try (Connection conn = DriverManager.getConnection(url, props);
+                                 CallableStatement properCase = conn.prepareCall("{ ? = CALL create_account( ?, ?, ? ) }")){
+                                    conn.setSchema("olympic_schema");
 
-                                    System.out.println("done"); 
+                                    od.callCreateAccount(properCase);
+
                                 } catch (SQLException err) {
                                     System.out.println("SQL Error");
                                     while (err != null) {
@@ -82,8 +107,8 @@ public class OlympicDB {
             } while (od.contMenuLoop);
     }
 
-    public OlympicDB(Scanner sc) {
-        this.sc = sc;
+    public OlympicDB(BufferedReader br) {
+        this.br = br;
     }
 
     public void loadJDBC() {
@@ -95,15 +120,18 @@ public class OlympicDB {
         }
     }
 
-    public void setDbInfo(Scanner sc) {
-        System.out.println("Please enter your username and password (one after the other): ");
+    public void setDbInfo(BufferedReader br) {
         try {
-            user = sc.nextLine(); 
-            pass = sc.nextLine(); 
+            System.out.print("Enter username: ");
+            user = br.readLine();
+            System.out.print("Enter password: ");
+            pass = br.readLine();
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again.");
         } catch (IllegalArgumentException ex) {
             System.err.println("The scanner was likely closed before reading the user's input, please try again.");
+        } catch (IOException ex) {
+            System.err.println("IOException");
         }
     }
 
@@ -130,14 +158,39 @@ public class OlympicDB {
     }
 
     public void callCreateAccount(CallableStatement pc){
+        System.out.println("You're creating an account! Please enter the following"); 
         try {
-            pc.setString("username", "urmom");
-            pc.setString("password", "hi");
-            pc.setString("role", "Participant");
+            System.out.print("Enter username: ");
+            String username = br.readLine();
+            System.out.print("Enter password: ");
+            String password = br.readLine();
+            System.out.print("Enter role: ");
+            String role = br.readLine();
+
+            Boolean rReturn;
+
+            pc.registerOutParameter(1, Types.BIT);
+            pc.setString(2, username);
+            pc.setString(3, password);
+            pc.setString(4, role);
 
             pc.execute();
-        } catch (SQLException e) {
-            System.out.println("Exception"); 
+
+            rReturn = pc.getBoolean(1);
+
+            if(rReturn){
+                System.out.println("Account was created successfully!");
+            } else {
+                System.out.println("Account was not created...");
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again.");
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again.");
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E"); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception");
         }
         
     }
