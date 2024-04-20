@@ -1,6 +1,7 @@
 import java.util.Properties;
 import java.sql.*;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
 
@@ -24,11 +25,10 @@ public class OlympicDB {
         Properties props = new Properties();
         props.setProperty("user", od.getUser());
         props.setProperty("password", od.getPass());
+        props.setProperty("escapeSyntaxCallMode", "callIfNoReturn");
 
         System.out.println("Welcome to the Olympic DB, how may we help you?"); 
 
-        try (Connection conn = DriverManager.getConnection(url, props)){
-            conn.setSchema("recitation");
             do {
                 System.out.println("Press 1 for Database search, 2 for menu options, or any other key to quit");
                 do { 
@@ -51,36 +51,35 @@ public class OlympicDB {
 
                         switch (op_choice) {
                             case 1:
-                                CallableStatement properCase = conn.prepareCall("{ ? = call create_account( ? ) }"); 
-                                /*
-                                Boolean rReturn;
-                                properCase.registerOutParameter(1, Types.BIT);
-                                properCase.setString(2, "111222333");
-                                properCase.execute();
-                                rReturn = properCase.getBoolean(1);
-                                System.out.println(rReturn);
-                                 */
+                                try (Connection conn = DriverManager.getConnection(url, props);
+                                 CallableStatement properCase = conn.prepareCall("{ CALL create_account( ?, ?, ? ) }")){
+                                    conn.setSchema("olympic_schema");
+
+                                    properCase.setString(1, "urmom");
+                                    properCase.setString(2, "hi");
+                                    properCase.setString(3, "Participant");
+
+                                    properCase.execute();
+
+                                    System.out.println("done"); 
+                                } catch (SQLException err) {
+                                    System.out.println("SQL Error");
+                                    while (err != null) {
+                                        System.out.println("Message = " + err.getMessage());
+                                        System.out.println("SQLState = " + err.getSQLState());
+                                        System.out.println("SQL Code = " + err.getErrorCode());
+                                        err = err.getNextException();
+                                    }
+                                }
                             default:
                                 break;
                         }
                     } while (od.contMenuLoop); 
-
                 } else if (choice.equals("2")){
                     od.contMenuLoop = true;
                     System.out.println(mo);
                 } 
-
             } while (od.contMenuLoop);
-            
-        } catch (SQLException err) {
-            System.out.println("SQL Error");
-            while (err != null) {
-                System.out.println("Message = " + err.getMessage());
-                System.out.println("SQLState = " + err.getSQLState());
-                System.out.println("SQL Code = " + err.getErrorCode());
-                err = err.getNextException();
-            }
-        }
     }
 
     public OlympicDB(Scanner sc) {
@@ -124,10 +123,23 @@ public class OlympicDB {
 
     public String menuOptions() {
         StringBuilder options = new StringBuilder(); 
-        options.append("1. Can pay loan \n"); 
-        options_list.add("1. Can pay loan \n"); 
+        options.append("1. Create Account \n"); 
+        options_list.add("1. Create Account \n"); 
 
         return options.toString(); 
+    }
+
+    public void callCreateAccount(CallableStatement pc){
+        try {
+            pc.setString("username", "urmom");
+            pc.setString("password", "hi");
+            pc.setString("role", "Participant");
+
+            pc.execute();
+        } catch (SQLException e) {
+            System.out.println("Exception"); 
+        }
+        
     }
 
 }
