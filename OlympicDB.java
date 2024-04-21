@@ -607,7 +607,7 @@ public class OlympicDB {
     public void addEvent(){        
         CallableStatement properCase = null;
         try {
-            properCase = conn.prepareCall("{ CALL add_event ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL add_event ( ?, ?, ?, ?, ? ) }");
         
             System.out.println("Enter venue id: ");
             int venue_id = Integer.parseInt(br.readLine());
@@ -678,7 +678,7 @@ public class OlympicDB {
             while(keepAdding){
                 
             
-                properCase = conn.prepareCall("{ CALL add_team_to_event ( ?, ? ) }");
+                properCase = conn.prepareCall("{ CALL add_team_to_event ( ?) }");
             
                 System.out.println("Enter event id: ");
                 int event_id = Integer.parseInt(br.readLine());
@@ -722,7 +722,7 @@ public class OlympicDB {
     public void disqualifyTeam(){        
         CallableStatement properCase = null;
         try {
-            properCase = conn.prepareCall("{ CALL disqualify_team ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL disqualify_team ( ?) }");
         
         
             System.out.println("Enter team id: ");
@@ -749,7 +749,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_venues_in_olympiad ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL list_venues_in_olympiad ( ? }");
         
         
             System.out.println("Enter olympiad id: ");
@@ -785,7 +785,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_events_of_olympiad ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL list_events_of_olympiad ( ?) }");
         
         
             System.out.println("Enter olympiad id: ");
@@ -831,7 +831,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_teams_in_event ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL list_teams_in_event ( ?) }");
         
         
             System.out.println("Enter event id: ");
@@ -868,7 +868,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL show_placements_in_event ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL show_placements_in_event ( ?) }");
         
         
             System.out.println("Enter event id: ");
@@ -913,7 +913,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_participants_on_team ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL list_participants_on_team ( ? ) }");
         
         
             System.out.println("Enter team id: ");
@@ -936,6 +936,7 @@ public class OlympicDB {
         
             while(rs.next() ){
                 int participant_id = rs.getInt("participant_id");
+                int account = rs.getInt("account");
                 String first_name = rs.getString("first_name");
                 String middle_name = rs.getString("middle_name");
                 String last_name = rs.getString("last_name");
@@ -945,6 +946,7 @@ public class OlympicDB {
                
 
                 System.out.println("Participant ID is : " + participant_id);
+                System.out.println("Account is : " + account);
                 System.out.println("First name is : "+ first_name);
                 System.out.println("Middle name is : "+ middle_name);
                 System.out.println("Last name is : "+ last_name);
@@ -989,7 +991,7 @@ public class OlympicDB {
         
             while(rs.next() ){
 
-                int event = rs.getInt("event");
+                int event = rs.getInt("event_id");
                 int team = rs.getInt("team");
                 String medal = rs.getString("medal");
                 int position = rs.getInt("position_id");
@@ -1018,7 +1020,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_athlete_placement ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL list_athlete_placement ( ?) }");
         
         
             System.out.println("Enter participant id: ");
@@ -1032,15 +1034,15 @@ public class OlympicDB {
         
             while(rs.next() ){
 
-                int event = rs.getInt("event");
+                int event = rs.getInt("event_id");
                 int team = rs.getInt("team");
                 String medal = rs.getString("medal");
                 int position = rs.getInt("position_id");
 
                 System.out.println("Event ID is : " + event);
                 System.out.println("Team ID is: "+ team);
-                System.out.println("Event gender is: "+ medal);
-                System.out.println("Event date is: "+ position);
+                System.out.println("Event medal is: "+ medal);
+                System.out.println("Event position is: "+ position);
                 System.out.println();
             }
 
@@ -1055,5 +1057,57 @@ public class OlympicDB {
             System.err.println("IO Exception E" + ex.getMessage());
         }
     }
+
+    public void topSports(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL top_sports ( ?, ?) }");
+        
+        
+            System.out.println("Enter the number of years to search (x): ");
+            int x = Integer.parseInt(br.readLine());
+
+            System.out.println("Enter the number of teams to display (k): ");
+            int k = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, x);
+            properCase.setInt(2, k);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Top " + k + "sports in last " + x + " years:  \n\n\n");
+           
+            /*
+             * sport_id   INTEGER,
+            sport_name VARCHAR(30),
+            team_count BIGINT
+
+             */
+            while(rs.next() ){
+
+                int sportID = rs.getInt("sport_id");
+                String sportName = rs.getString("sport_name");
+                int teamCount = rs.getInt("team_count");
+
+                System.out.println("Sport ID is: " + sportID);
+                System.out.println("Sport Name is: "+ sportName);
+                System.out.println("Number of Teams is: "+ teamCount); 
+                System.out.println();
+            }
+
+            System.out.println("Listed top sports in olympics\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+
     
 }

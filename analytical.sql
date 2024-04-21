@@ -76,7 +76,7 @@ RETURNS TABLE
         (
             sport_id   INTEGER,
             sport_name VARCHAR(30),
-            team_count BIGINT
+            team_count INTEGER
 
         )
 AS
