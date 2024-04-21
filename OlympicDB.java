@@ -1,6 +1,5 @@
 import java.util.Properties;
 
-import javax.swing.plaf.synth.SynthPasswordFieldUI;
 
 import java.sql.*;
 import java.util.NoSuchElementException;
@@ -169,31 +168,73 @@ public class OlympicDB {
                     break;
 
                 case "13":
-                    System.out.println("Listing venues in an Olympiad...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Listing venues in an Olympiad...");
+                        od.listVenuesInOlympiad();
+                    }
                     break;
 
                 case "14":
-                    System.out.println("Listing events of an Olympiad...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {       
+                        System.out.println("Listing events of an Olympiad...");
+                        od.listEventsOfOlympiad();
+                    }
                     break;
 
                 case "15":
-                    System.out.println("Listing teams in an event...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Listing teams in an event...");
+                        od.listTeamsInEvent();
+                    }
                     break;
 
                 case "16":
-                    System.out.println("Showing placements in an event...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Showing placements in an event...");
+                        od.showPlacementsInEvent();
+                    }
                     break;
 
                 case "17":
-                    System.out.println("Listing participants on a team...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Listing participants on a team...");
+                        od.listParticipantsOnTeam();
+                    }
                     break;
 
                 case "18":
-                    System.out.println("Listing country placements in an Olympiad...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Listing country placements in an Olympiad...");
+                        od.listCountryPlacementsInOlympiad();
+                    }
                     break;
 
                 case "19":
-                    System.out.println("Listing athlete placement...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {   
+                        System.out.println("Listing athlete placement...");
+                        od.listAthletePlacement();
+                    }
                     break;
 
                 case "20":
@@ -914,6 +955,96 @@ public class OlympicDB {
             }
 
             System.out.println("Listed participants on team\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void listCountryPlacementsInOlympiad(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL list_country_placements_in_olympiad ( ?, ? ) }");
+        
+        
+            System.out.println("Enter olympiad id: ");
+            int olympiad_id = Integer.parseInt(br.readLine());
+            System.out.println("Enter country code: ");
+            String country_code = br.readLine();
+            
+
+            properCase.setInt(1, olympiad_id);
+            properCase.setString(2, country_code);
+            
+            rs = properCase.executeQuery();
+            System.out.print(country_code+ " placements in Olympiad" + olympiad_id + ":  \n\n\n");
+           
+        
+            while(rs.next() ){
+
+                int event = rs.getInt("event");
+                int team = rs.getInt("team");
+                String medal = rs.getString("medal");
+                int position = rs.getInt("position_id");
+
+                System.out.println("Event ID is : " + event);
+                System.out.println("Team ID is: "+ team);
+                System.out.println("Event gender is: "+ medal);
+                System.out.println("Event date is: "+ position);
+                System.out.println();
+            }
+
+            System.out.println("Listed country placements in olympiad\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void listAthletePlacement(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL list_athlete_placement ( ?, ? ) }");
+        
+        
+            System.out.println("Enter participant id: ");
+            int participant_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, participant_id);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Placements in event " + participant_id + ":  \n\n\n");
+           
+        
+            while(rs.next() ){
+
+                int event = rs.getInt("event");
+                int team = rs.getInt("team");
+                String medal = rs.getString("medal");
+                int position = rs.getInt("position_id");
+
+                System.out.println("Event ID is : " + event);
+                System.out.println("Team ID is: "+ team);
+                System.out.println("Event gender is: "+ medal);
+                System.out.println("Event date is: "+ position);
+                System.out.println();
+            }
+
+            System.out.println("Listed athlete placements in olympics\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (IllegalArgumentException ex) {

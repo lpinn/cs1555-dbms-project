@@ -411,7 +411,8 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listCountryPlacementsInOlympiad(olympic_id varchar(30), country_id char(3))
+/* 17  show country placements in olympiad*/
+CREATE OR REPLACE FUNCTION list_country_placements_in_olympiad(olympic_id varchar(30), country_code char(3))
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
@@ -426,7 +427,7 @@ $$
             FROM olympic_schema.PLACEMENT AS P
             WHERE P.team IN (SELECT T.team_id
                              FROM olympic_schema.TEAM AS T
-                             WHERE T.country = country_id)
+                             WHERE T.country = country_code)
                 AND P.event IN(SELECT E.event_id
                                FROM olympic_schema.EVENT AS E
                                WHERE E.olympiad = olympic_id);
@@ -438,7 +439,8 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listAthletePlacement(participant_id integer)
+/* 18  show athlete placements in olympiad*/
+CREATE OR REPLACE FUNCTION list_athlete_placement(participant_id integer)
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
