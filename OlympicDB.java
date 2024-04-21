@@ -651,13 +651,19 @@ public class OlympicDB {
                 System.out.println("Enter position: ");
                 int position = Integer.parseInt(br.readLine());
 
+                if(event_id == -1 || team_id == -1 || position == -1){
+                    System.out.println("User provided invalid tuple. ");
+                    continue;
+                }else{
+                    properCase.setInt(1, event_id);
+                    properCase.setInt(2, team_id);
+                    properCase.setInt(3, position);
+                    
+                    properCase.execute();
+                    System.out.println("Added team to event\n");
+                }
                 
-                properCase.setInt(1, event_id);
-                properCase.setInt(2, team_id);
-                properCase.setInt(3, position);
                 
-                properCase.execute();
-                System.out.println("Added team to event\n");
 
             }
             
@@ -763,7 +769,7 @@ public class OlympicDB {
                 System.out.println("Olympiad number is: "+ olympiad_num);
                 System.out.println("Sport ID is: "+ sport);
                 System.out.println("Event gender is: "+ gender);
-                System.out.println("Event date is: "+ date);
+                System.out.println("Event date is: "+ date.toString());
                 System.out.println();
             }
 
@@ -784,22 +790,21 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_venues_in_olympiad ( ?, ? ) }");
+            properCase = conn.prepareCall("{ CALL list_teams_in_event ( ?, ? ) }");
         
         
-            System.out.println("Enter olympiad id: ");
-            int olympiad_id = Integer.parseInt(br.readLine());
+            System.out.println("Enter event id: ");
+            int event_id = Integer.parseInt(br.readLine());
             
-            properCase.setInt(1, olympiad_id);
+            properCase.setInt(1, event_id);
             
             rs = properCase.executeQuery();
-            System.out.print("Venues in olympiad " + olympiad_id + ":  \n\n\n");
+            System.out.print("Teams in event " + event_id + ":  \n\n\n");
             while(rs.next() ){
-                String venueName = rs.getString("venue_name");
-                int capacity = rs.getInt("capacity");
+                int teamID = rs.getInt("team_id");
 
-                System.out.println("Venue name is : " + venueName);
-                System.out.println("Venue capacity is : "+ capacity);
+
+                System.out.println("Team ID is : "+ teamID);
                 System.out.println();
             }
 
@@ -815,5 +820,109 @@ public class OlympicDB {
         }
     }
 
+
+
+    public void showPlacementsInEvent(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL show_placements_in_event ( ?, ? ) }");
+        
+        
+            System.out.println("Enter event id: ");
+            int event_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, event_id);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Placements in event " + event_id + ":  \n\n\n");
+           
+        
+            while(rs.next() ){
+
+                int event = rs.getInt("event");
+                int team = rs.getInt("team");
+                String medal = rs.getString("medal");
+                int position = rs.getInt("position_id");
+
+                System.out.println("Event ID is : " + event);
+                System.out.println("Team ID is: "+ team);
+                System.out.println("Event gender is: "+ medal);
+                System.out.println("Event date is: "+ position);
+                System.out.println();
+            }
+
+            System.out.println("Listed placements in event\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+
+
+    public void listParticipantsOnTeam(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL list_participants_on_team ( ?, ? ) }");
+        
+        
+            System.out.println("Enter team id: ");
+            int team_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, team_id);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Events of olympiad " + team_id + ":  \n\n\n");
+           /*
+            *         participant_id INTEGER,
+        account INTEGER,
+        first_name VARCHAR(30),
+        middle_name VARCHAR(30),
+        last_name VARCHAR(30),
+        birth_country CHAR(3),
+        dob TIMESTAMP,
+        gender olympic_schema.participant_gender_check
+            */
+        
+            while(rs.next() ){
+                int participant_id = rs.getInt("participant_id");
+                String first_name = rs.getString("first_name");
+                String middle_name = rs.getString("middle_name");
+                String last_name = rs.getString("last_name");
+                String birthCountry = rs.getString("birth_country");
+                Timestamp dob = rs.getTimestamp("dob");
+                String gender = rs.getString("gender");
+               
+
+                System.out.println("Participant ID is : " + participant_id);
+                System.out.println("First name is : "+ first_name);
+                System.out.println("Middle name is : "+ middle_name);
+                System.out.println("Last name is : "+ last_name);
+                System.out.println("Birth Country is: "+ birthCountry);
+                System.out.println("Event date is: "+ dob.toString());
+                System.out.println("Event gender is: "+ gender);
+                System.out.println();
+            }
+
+            System.out.println("Listed participants on team\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
     
 }

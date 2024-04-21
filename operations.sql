@@ -300,7 +300,7 @@ $$
     END
 $$  language plpgsql;
 
-/* 12. - LIST EVENTS OF OLYMPIAD
+/* 13. - LIST EVENTS OF OLYMPIAD
     time permitting - replace sport id with sport name
 */
 CREATE OR REPLACE FUNCTION list_events_of_olympiad(olympiad_id VARCHAR(30))
@@ -326,6 +326,7 @@ $$
     END
 $$  language plpgsql;
 
+/* 14 - LIST TEAMS IN EVENTS*/
 CREATE OR REPLACE FUNCTION listTeamsInEvent(event_id integer)
 RETURNS TABLE(
         team_id integer
@@ -351,8 +352,8 @@ $$
 $$  language plpgsql;
 
 
-
-CREATE OR REPLACE FUNCTION showPlacementsInEvent(event_id integer)
+/* 15 - SHOW PLACEMENTS IN EVENT*/
+CREATE OR REPLACE FUNCTION show_placements_in_event(event_id integer)
 RETURNS TABLE(
         event INTEGER,
         team INTEGER,
@@ -374,13 +375,14 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listParticipantsOnTeam(team_this integer)
+/* 16 list participants on team*/
+CREATE OR REPLACE FUNCTION list_participants_on_team(team_this integer)
 RETURNS TABLE(
         participant_id INTEGER,
         account INTEGER,
-        first VARCHAR(30),
-        middle VARCHAR(30),
-        last VARCHAR(30),
+        first_name VARCHAR(30),
+        middle_name VARCHAR(30),
+        last_name VARCHAR(30),
         birth_country CHAR(3),
         dob TIMESTAMP,
         gender olympic_schema.participant_gender_check
