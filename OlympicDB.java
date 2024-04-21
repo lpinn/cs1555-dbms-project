@@ -10,17 +10,21 @@ import java.sql.Timestamp;
 public class OlympicDB {
     private String user;
     private String pass; 
-    private String menuOptions; 
+    private Connection conn; 
 
-    private BufferedReader br;
+    private boolean connected; 
 
-    public OlympicDB(BufferedReader br){
-        this.br = br; 
+    BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+    public OlympicDB(BufferedReader br, String user, String pass){
+        this.br = br;
+        this.user = user;
+        this.pass = pass;
     }   
 
     public static void main(String[] args){
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        OlympicDB od = new OlympicDB(br); 
+        OlympicDB od = new OlympicDB(br, "postgres", "cowcow2024"); 
 
         String menuOptions = ""; 
         menuOptions = od.getMenuOptions();
@@ -38,6 +42,7 @@ public class OlympicDB {
         
         while(loop){
             try {
+                System.out.print(">> ");
                 choice = br.readLine();
             } catch (IOException e){
                 System.out.println("Issue with capturing input"); 
@@ -45,19 +50,40 @@ public class OlympicDB {
             
             switch (choice) {
                 case "1":
+                    System.out.println("---");
                     System.out.println("You are connecting to the system!"); 
+                    od.connect();
+
                     break;
 
                 case "2":
-                    System.out.println("Creating a new account!");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Creating a new account!");
+                        od.callCreateAccount();
+                    }
                     break;
 
                 case "3":
-                    System.out.println("Removing an account...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Removing an account...");
+                        od.callRemoveAccount();
+                    }
                     break;
 
                 case "4":
-                    System.out.println("Adding a new participant!");
+                    System.out.println("---");
+                        if(od.connected == false){
+                            System.out.println("You need to connect to a DB first."); 
+                        } else {
+                            System.out.println("Adding a new participant!");
+                            od.callRemoveAccount();
+                        }
                     break;
 
                 case "5":
@@ -180,5 +206,125 @@ public class OlympicDB {
         return sb.toString();
     }
 
-    
+    public void loadJDBC() {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException err) {
+            System.err.println("Unable to detect the JDBC .jar dependency. Check that the library is correctly loaded in and try again.");
+            System.exit(-1);
+        }
+    }
+
+    public void setDbInfo(BufferedReader br) {
+        try {
+            System.out.print("Enter username: ");
+            user = br.readLine();
+            System.out.print("Enter password: ");
+            pass = br.readLine();
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("IllegalArgumentException " + ex.getMessage());
+        } catch (IOException ex) {
+            System.err.println("IOException " + ex.getMessage());
+        }
+    }
+
+    public String getUser(){
+        if(user != null){
+            return user; 
+        }
+        return null; 
+    }
+
+    public String getPass(){
+        if(pass != null){
+            return pass;
+        }
+        return null; 
+    } 
+
+    public void connect() {
+        loadJDBC();
+        setDbInfo(br);
+        String url = "jdbc:postgresql://localhost:5432/";
+        Properties props = new Properties();
+        props.setProperty("user", getUser());
+        props.setProperty("password", getPass());
+        props.setProperty("escapeSyntaxCallMode", "callIfNoReturn");
+        try {
+            conn = DriverManager.getConnection(url, props);
+            conn.setSchema("olympic_schema");
+            connected = true;
+            System.out.println("Connected to the database successfully.");
+
+        } catch (Exception ex) {
+            System.out.println("Failed to connect to the database. Please try again. " + ex.getMessage());
+        }
+
+    }
+
+    public void callCreateAccount(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ ? = CALL create_account( ?, ?, ? ) }");
+        
+            System.out.print("Enter username: ");
+            String username = br.readLine();
+            System.out.print("Enter password: ");
+            String password = br.readLine();
+            System.out.print("Enter role: ");
+            String role = br.readLine();
+
+            Boolean rReturn;
+
+            properCase.registerOutParameter(1, Types.BIT);
+            properCase.setString(2, username);
+            properCase.setString(3, password);
+            properCase.setString(4, role);
+
+            properCase.execute();
+
+            rReturn = properCase.getBoolean(1);
+
+            if(rReturn){
+                System.out.println("Account was created successfully!");
+            } else {
+                System.out.println("Account was not created... please try again");
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }  
+    }
+
+    public void callRemoveAccount(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ CALL remove_account( ? ) }");
+        
+            System.out.print("Enter account id: ");
+            int id = Integer.parseInt(br.readLine());
+
+            properCase.setInt(1, id);
+
+            properCase.execute();
+
+            System.out.println("Successfully removed account"); 
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
 }
