@@ -1,7 +1,6 @@
 import java.util.Properties;
 import java.sql.*;
 import java.util.NoSuchElementException;
-import java.util.ArrayList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -82,24 +81,48 @@ public class OlympicDB {
                             System.out.println("You need to connect to a DB first."); 
                         } else {
                             System.out.println("Adding a new participant!");
-                            od.callRemoveAccount();
+                            od.callAddParticipant();
                         }
                     break;
 
                 case "5":
-                    System.out.println("Removing participant...");
+                    System.out.println("---");
+                        if(od.connected == false){
+                            System.out.println("You need to connect to a DB first."); 
+                        } else {
+                            System.out.println("Removing participant...");
+                            od.callRemoveParticipant();
+                        }
                     break;
 
                 case "6":
-                    System.out.println("Adding a team member!");
+                    System.out.println("---");
+                        if(od.connected == false){
+                            System.out.println("You need to connect to a DB first."); 
+                        } else {
+                            System.out.println("Adding a team member!");
+                            od.callAddTeamMember();
+                        }
                     break;
 
                 case "7":
-                    System.out.println("Removing a team member...");
+                    System.out.println("---");
+                        if(od.connected == false){
+                            System.out.println("You need to connect to a DB first."); 
+                        } else {
+                            System.out.println("Removing a team member...");
+                            od.callRemoveAccount();
+                        }
                     break;
                 
                 case "8":
-                    System.out.println("Registering a new team!");
+                    System.out.println("---");
+                        if(od.connected == false){
+                            System.out.println("You need to connect to a DB first."); 
+                        } else {
+                            System.out.println("Registering a new team!");
+                            od.callRemoveAccount();
+                        }
                     break;
 
                 case "9":
@@ -327,4 +350,190 @@ public class OlympicDB {
         }
     }
 
+    public void callAddParticipant(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ ? = CALL add_participant( ?, ?, ?, ?, ?, ?, ? ) }");
+        
+            System.out.print("Enter account id: ");
+            int account_id = Integer.parseInt(br.readLine());
+            System.out.print("Enter first name: ");
+            String first = br.readLine();
+            System.out.print("Enter middle name (if applicable, press enter if not): ");
+            String middle = br.readLine();
+            System.out.print("Enter last name: ");
+            String last = br.readLine();
+            System.out.print("Enter birth country: ");
+            String country = br.readLine();
+            System.out.print("Enter date of birth (in this format - YYYY-MM-DD): ");
+            String t = br.readLine();
+            Timestamp dob = Timestamp.valueOf(t);
+            System.out.print("Enter gender (M/F): ");
+            String gender = br.readLine();
+
+            Boolean rReturn;
+
+            properCase.registerOutParameter(1, Types.BIT);
+            properCase.setInt(2, account_id);
+            properCase.setString(3, first);
+            properCase.setString(4, middle);
+            properCase.setString(5, last);
+            properCase.setString(6, country);
+            properCase.setTimestamp(7, dob);
+            properCase.setString(8, gender);
+
+            properCase.execute();
+
+            rReturn = properCase.getBoolean(1);
+
+            if(rReturn){
+                System.out.println("Participant was added successfully!");
+            } else {
+                System.out.println("Participant could not be created...");
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("Illegal Argument Exception E " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void callRemoveParticipant(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ CALL remove_participant( ? ) }");
+        
+            System.out.print("Enter participant id: ");
+            int id = Integer.parseInt(br.readLine());
+
+            properCase.setInt(1, id);
+
+            properCase.execute();
+
+            System.out.println("Removed participant"); 
+
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void callAddTeamMember(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ ? = CALL add_team_member ( ?, ? ) }");
+        
+            System.out.print("Enter team id: ");
+            int team_id = Integer.parseInt(br.readLine());
+            System.out.print("Enter participant id: ");
+            int participant_id = Integer.parseInt(br.readLine());
+            
+            Boolean rReturn;
+
+            properCase.registerOutParameter(1, Types.BIT);
+            properCase.setInt(2, team_id);
+            properCase.setInt(3, participant_id);
+            
+            properCase.execute();
+
+            rReturn = properCase.getBoolean(1);
+
+            if(rReturn){
+                System.out.println("Team member was added successfully!");
+            } else {
+                System.out.println("Team member could not be created...");
+            }
+
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void callRemoveTeamMember(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ CALL remove_team_member ( ?, ? ) }");
+        
+            System.out.print("Enter team id: ");
+            int team_id = Integer.parseInt(br.readLine());
+            System.out.print("Enter participant id: ");
+            int participant_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, participant_id);
+            properCase.setInt(2, team_id);
+            
+            properCase.execute();
+
+            System.out.println("Removed team member\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void callRegisterTeam(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ ? = CALL register_team ( ?, ?, ?, ?, ? ) }");
+        
+            System.out.print("Enter olympiad: ");
+            String olympiad = br.readLine();
+            System.out.print("Enter sport id: ");
+            int sport_id = Integer.parseInt(br.readLine());
+            System.out.print("Enter coach id: ");
+            int coach_id = Integer.parseInt(br.readLine());
+            System.out.print("Enter country code: ");
+            String country_code = br.readLine();
+            System.out.print("Enter gender: ");
+            String gender = br.readLine();
+
+            Boolean rReturn;
+
+            properCase.registerOutParameter(1, Types.BIT);
+            properCase.setString(2, olympiad);
+            properCase.setInt(3, sport_id);
+            properCase.setInt(4, coach_id);
+            properCase.setString(5, country_code);
+            properCase.setString(6, gender);
+
+            properCase.execute();
+
+            rReturn = properCase.getBoolean(1);
+
+            if(rReturn){
+                System.out.println("Team was registered successfully!");
+            } else {
+                System.out.println("Team could not be registered...");
+            }
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+    
 }
