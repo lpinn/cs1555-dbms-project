@@ -1,4 +1,7 @@
 import java.util.Properties;
+
+import javax.swing.plaf.synth.SynthPasswordFieldUI;
+
 import java.sql.*;
 import java.util.NoSuchElementException;
 import java.io.BufferedReader;
@@ -117,16 +120,22 @@ public class OlympicDB {
                 
                 case "8":
                     System.out.println("---");
-                        if(od.connected == false){
-                            System.out.println("You need to connect to a DB first."); 
-                        } else {
-                            System.out.println("Registering a new team!");
-                            od.callRemoveAccount();
-                        }
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Registering a new team!");
+                        od.callRemoveAccount();
+                    }
                     break;
 
                 case "9":
-                    System.out.println("Adding a new event!");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first.");
+                    } else {
+                        System.out.println("Adding a new event!");
+                    }
+                    
                     break;
 
                 case "10":
@@ -687,5 +696,124 @@ public class OlympicDB {
             System.err.println("IO Exception E" + ex.getMessage());
         }
     }
+
+    public void listVenuesInOlympiad(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL list_venues_in_olympiad ( ?, ? ) }");
+        
+        
+            System.out.println("Enter olympiad id: ");
+            int olympiad_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, olympiad_id);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Venues in olympiad " + olympiad_id + ":  \n\n\n");
+            while(rs.next() ){
+                String venueName = rs.getString("venue_name");
+                int capacity = rs.getInt("capacity");
+
+                System.out.println("Venue name is : " + venueName);
+                System.out.println("Venue capacity is : "+ capacity);
+                System.out.println();
+            }
+
+            System.out.println("listed venues\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void listEventsOfOlympiad(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL list_events_of_olympiad ( ?, ? ) }");
+        
+        
+            System.out.println("Enter olympiad id: ");
+            int olympiad_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, olympiad_id);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Events of olympiad " + olympiad_id + ":  \n\n\n");
+           
+        
+            while(rs.next() ){
+                int event_id = rs.getInt("event_id");
+                String venue = rs.getString("venue");
+                String olympiad_num = rs.getString("olympiad_num");
+                int sport = rs.getInt("sport");
+                String gender = rs.getString("gender");
+                Timestamp date = rs.getTimestamp("date");
+
+                System.out.println("Event ID is : " + event_id);
+                System.out.println("Venue name is : "+ venue);
+                System.out.println("Olympiad number is: "+ olympiad_num);
+                System.out.println("Sport ID is: "+ sport);
+                System.out.println("Event gender is: "+ gender);
+                System.out.println("Event date is: "+ date);
+                System.out.println();
+            }
+
+            System.out.println("Listed events in olympiad\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void listTeamsInEvent(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ CALL list_venues_in_olympiad ( ?, ? ) }");
+        
+        
+            System.out.println("Enter olympiad id: ");
+            int olympiad_id = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, olympiad_id);
+            
+            rs = properCase.executeQuery();
+            System.out.print("Venues in olympiad " + olympiad_id + ":  \n\n\n");
+            while(rs.next() ){
+                String venueName = rs.getString("venue_name");
+                int capacity = rs.getInt("capacity");
+
+                System.out.println("Venue name is : " + venueName);
+                System.out.println("Venue capacity is : "+ capacity);
+                System.out.println();
+            }
+
+            System.out.println("listed venues\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
     
 }

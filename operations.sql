@@ -231,7 +231,7 @@ $$;
 alter procedure  add_team_to_event(integer, integer) owner to postgres;
 
 
-/* 9. - ADD EVENT OUTCOME*/
+/* 10. - ADD EVENT OUTCOME*/
 /* need to add medal considerations -- handeled by trigger?
  * need to add no-event considerations
  */
@@ -253,6 +253,7 @@ $$;
 
 alter procedure add_event_outcome(integer, integer, integer) owner to postgres;
 
+/* 11. - DISQUALIFY TEAM*/
 create or replace procedure disqualify_team(IN disqualify_team integer)
     language plpgsql
 as
@@ -275,6 +276,7 @@ $$;
 
 alter procedure disqualify_team(integer) owner to postgres;
 
+/* 12. - LIST VENUES IN OLYMPIAD*/
 create or replace function list_venues_in_olympiad(olympiad_id varchar(30))
 
 RETURNS TABLE(
@@ -298,7 +300,10 @@ $$
     END
 $$  language plpgsql;
 
-CREATE OR REPLACE FUNCTION listEventsOfOlympiad(olympiad_id VARCHAR(30))
+/* 12. - LIST EVENTS OF OLYMPIAD
+    time permitting - replace sport id with sport name
+*/
+CREATE OR REPLACE FUNCTION list_events_of_olympiad(olympiad_id VARCHAR(30))
 RETURNS TABLE(
         event_id integer,
         venue varchar(30),
