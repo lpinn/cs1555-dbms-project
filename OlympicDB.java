@@ -678,7 +678,7 @@ public class OlympicDB {
             while(keepAdding){
                 
             
-                properCase = conn.prepareCall("{ CALL add_team_to_event ( ?) }");
+                properCase = conn.prepareCall("{ CALL add_team_to_event ( ?, ?, ?) }");
             
                 System.out.println("Enter event id: ");
                 int event_id = Integer.parseInt(br.readLine());
