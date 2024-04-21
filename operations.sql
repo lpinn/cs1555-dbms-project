@@ -212,7 +212,7 @@ AS $$
     END
 $$;
 
-
+/* 9. - ADD  TEAM TO EVENT */
 create or replace procedure add_team_to_event(IN event integer, IN team integer)
     language plpgsql
 as
@@ -230,6 +230,11 @@ $$;
 
 alter procedure  add_team_to_event(integer, integer) owner to postgres;
 
+
+/* 9. - ADD EVENT OUTCOME*/
+/* need to add medal considerations -- handeled by trigger?
+ * need to add no-event considerations
+ */
 create or replace procedure add_event_outcome(IN outcome_event integer, IN outcome_team integer, IN outcome_position integer)
     language  plpgsql
 as

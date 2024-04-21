@@ -130,12 +130,24 @@ public class OlympicDB {
                     break;
 
                 case "10":
-                    System.out.println("Adding a team to an event!");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    }else{
+                        System.out.println("Adding a team to an event!");
+                        od.callAddTeamToEvent();
+                    }
                     break;
 
                 case "11":
-                    System.out.println("Adding event outcomes!");
-                    break;
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {
+                        System.out.println("Adding an outcome to an event!");
+                        od.callAddEventOutcome();
+                    }
+                break;
 
                 case "12":
                     System.out.println("Disqualifying a team...");
@@ -525,6 +537,79 @@ public class OlympicDB {
             } else {
                 System.out.println("Team could not be registered...");
             }
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+    public void callAddTeamToEvent(){        
+        CallableStatement properCase = null;
+        try {
+            properCase = conn.prepareCall("{ CALL add_team_to_event ( ?, ? ) }");
+        
+            System.out.println("Enter event id: ");
+            int event_id = Integer.parseInt(br.readLine());
+            System.out.println("Enter team id: ");
+            int team_id = Integer.parseInt(br.readLine());
+            
+            
+            properCase.setInt(1, event_id);
+            properCase.setInt(2, team_id);
+            
+            properCase.execute();
+
+            System.out.println("Added team to event\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
+
+
+    //--------------------------------------------------------------------------------------
+    // need to add medal considerations and no events considerations
+    public void callAddEventOutcome(){        
+        CallableStatement properCase = null;
+        try {
+            boolean keepAdding = true;
+            while(keepAdding){
+                
+            
+                properCase = conn.prepareCall("{ CALL add_team_to_event ( ?, ? ) }");
+            
+                System.out.println("Enter event id: ");
+                int event_id = Integer.parseInt(br.readLine());
+
+                if(event_id == -1){
+                    System.out.println("Returning to main menu");
+                    break;
+                }
+                System.out.println("Enter team id: ");
+                int team_id = Integer.parseInt(br.readLine());
+                System.out.println("Enter position: ");
+                int position = Integer.parseInt(br.readLine());
+
+                
+                properCase.setInt(1, event_id);
+                properCase.setInt(2, team_id);
+                properCase.setInt(3, position);
+                
+                properCase.execute();
+                System.out.println("Added team to event\n");
+
+            }
+            
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
