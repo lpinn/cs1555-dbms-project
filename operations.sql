@@ -41,7 +41,7 @@ AS $$
         --First update and set account to null in participant--
         UPDATE olympic_schema.participant
             SET account = NULL
-        WHERE olympic_schema.account.account_id = aid;
+        WHERE account_id = aid;
 
         --Then delete the account 
         DELETE FROM olympic_schema.account
@@ -51,7 +51,7 @@ AS $$
         GET DIAGNOSTICS row_check = ROW_COUNT;
 
         if(row_check = 0) then
-            RAISE NOTICE 'Account with the given account_id does not exist.';
+            RAISE EXCEPTION 'Account with the given account_id does not exist.';
         else
             RAISE NOTICE 'Account was deleted successfully.';
         end if;
