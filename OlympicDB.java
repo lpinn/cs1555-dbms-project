@@ -1051,8 +1051,13 @@ public class OlympicDB {
             
             rs = properCase.executeQuery();
             System.out.print("Placements in event " + event_id + ":  \n\n\n");
-           
-        
+
+            StringBuffer output = new StringBuffer("");
+            output.append(rPad("Event ID", 20));
+            output.append(rPad("Team ID", 20));
+            output.append(rPad("Gender", 30));
+            output.append(rPad("Event Date", 10)).append("\n");
+
             while(rs.next() ){
 
                 int event = rs.getInt("event");
@@ -1060,13 +1065,12 @@ public class OlympicDB {
                 String medal = rs.getString("medal");
                 int position = rs.getInt("position_id");
 
-                System.out.println("Event ID is : " + event);
-                System.out.println("Team ID is: "+ team);
-                System.out.println("Event gender is: "+ medal);
-                System.out.println("Event date is: "+ position);
-                System.out.println();
+                output.append(rPad(String.valueOf(event), 20));
+                output.append(rPad(String.valueOf(team), 20));
+                output.append(rPad(medal, 30));
+                output.append(rPad(String.valueOf(position), 10)).append("\n");
             }
-
+            System.out.println(output.toString());
             System.out.println("Listed placements in event\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
@@ -1084,13 +1088,23 @@ public class OlympicDB {
             properCase = conn.prepareCall("SELECT * FROM list_participants_on_team ( ? )");
         
             int team_id = readInt(sc, "Enter team id: ");
-
             properCase.setInt(1, team_id);
             
             rs = properCase.executeQuery();
             System.out.print("Events of olympiad " + team_id + ":  \n\n\n");
-        
-            while(rs.next() ){
+
+            StringBuffer output = new StringBuffer("");
+            output.append(rPad("Participant Id", 20));
+            output.append(rPad("Account Id", 20));
+            output.append(rPad("First Name", 30));
+            output.append(rPad("Middle Name", 10));
+            output.append(rPad("Last Name", 30));
+            output.append(rPad("Birth Country", 20));
+            output.append(rPad("Date Of Birth", 20));
+            output.append(rPad("Gender", 20)).append("\n");
+
+            int i = 0;
+            while (rs.next()) {
                 int participant_id = rs.getInt("participant_id");
                 int account = rs.getInt("account");
                 String first_name = rs.getString("first_name");
@@ -1099,24 +1113,31 @@ public class OlympicDB {
                 String birthCountry = rs.getString("birth_country");
                 Timestamp dob = rs.getTimestamp("dob");
                 String gender = rs.getString("gender");
-               
 
-                System.out.println("Participant ID is : " + participant_id);
-                System.out.println("Account is : " + account);
-                System.out.println("First name is : "+ first_name);
-                System.out.println("Middle name is : "+ middle_name);
-                System.out.println("Last name is : "+ last_name);
-                System.out.println("Birth Country is: "+ birthCountry);
-                System.out.println("Event date is: "+ dob.toString());
-                System.out.println("Event gender is: "+ gender);
-                System.out.println();
+                output.append(rPad(String.valueOf(participant_id), 20));
+                output.append(rPad(String.valueOf(account), 20));
+                output.append(rPad(first_name, 30));
+                output.append(rPad(middle_name, 10));
+                output.append(rPad(last_name, 30));
+                output.append(rPad(birthCountry, 20));
+                output.append(rPad(dob.toString(), 20));
+                output.append(rPad(gender, 20)).append("\n");
+
+                i++;
+            }
+
+            if (i == 0) {
+                System.out
+                        .println("\n\nNo participants added to the team " + team_id + " yet\n");
+            } else {
+                System.out.println(output.toString());
             }
 
             System.out.println("Listed participants on team\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
-            System.err.println("SQL Exception E " + ex.getMessage()); 
+            System.err.println(ex.getMessage()); 
         }
     }
 
