@@ -238,7 +238,7 @@ CREATE TABLE olympic_schema.PLACEMENT
     CONSTRAINT PLACEMENT_EVENT_FK
         FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id),
+        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id) ON DELETE CASCADE,
     CONSTRAINT PLACEMENT_MEDAL_FK
         FOREIGN KEY (medal) REFERENCES olympic_schema.MEDAL(type)
 );
