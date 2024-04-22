@@ -675,8 +675,8 @@ public class OlympicDB {
                             break;
                         }
                     }
-                    st.close();
                     rs.close();
+                    st.close();
                     break;
                 default:
                     System.out.println("Invalid remove option");
@@ -749,7 +749,6 @@ public class OlympicDB {
 
             ResultSet rs = st.executeQuery(); 
 
-            int pos = rs.getRow(); 
             int ti, pi = 0;
 
             System.out.println("----------");
@@ -928,7 +927,6 @@ public class OlympicDB {
     }
 
 
-
     /*addEventOutcome
      * calls add_event_outcome procedure with user input
      * inputs: event_id, team_id, position
@@ -945,16 +943,6 @@ public class OlympicDB {
 
             boolean keepAdding = true;
             while(keepAdding){
-                
-               // checkEvents = conn.prepareCall("SELECT * FROM check_num_events()");
-               // rs = checkEvents.executeQuery();
-
-               /* boolean eventsNum = rs.getBoolean("check_event");
-                if(eventsNum == false){
-                    System.out.println("No Outcomes were added since there are no Events");
-                }*/
-
-
                 properCase = conn.prepareCall("{CALL add_team_to_event ( ?, ?, ?)}");
             
                 int event_id = readInt(sc, "Enter event id: ");
@@ -991,7 +979,7 @@ public class OlympicDB {
         }
     }
 
-      /*disqualifyTeam
+    /*disqualifyTeam
      * calls disqualify_team procedure with user input
      * inputs: team_id
      * no return value
@@ -1026,7 +1014,7 @@ public class OlympicDB {
         }
     }
 
-      /*listVenuesInOlympiad
+    /*listVenuesInOlympiad
      * calls list_venues_in_olympiad function with user input
      * inputs: olympiad_num
      * returns table of venues and capacity
@@ -1077,11 +1065,7 @@ public class OlympicDB {
         }
     }
 
-     /*listVenuesInOlympiad
-     * calls list_venues_in_olympiad function with user input
-     * inputs: olympiad_num
-     * returns table of venues and capacity
-     */
+    
     public void listEventsOfOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1132,6 +1116,7 @@ public class OlympicDB {
             closeStatement(properCase);
         }
     }
+
      /*listTeamsInEvent
      * calls list_teams_in_event function with user input
      * inputs: event_id
@@ -1172,7 +1157,7 @@ public class OlympicDB {
         }
     }
 
-     /*showPlacementsInEvent
+    /*showPlacementsInEvent
      * calls show_placements_in_events function with user input
      * inputs: event_id
      * returns table of placements
@@ -1222,6 +1207,7 @@ public class OlympicDB {
         }
     }
 
+    
     public void listParticipantsOnTeam(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1286,11 +1272,6 @@ public class OlympicDB {
         }
     }
 
-     /*listCountryPlacementsInOlympiad
-     * calls list_country_in_olympiad function with user input
-     * inputs: olympiad_num, country_code
-     * returns table of placements
-     */
     public void listCountryPlacementsInOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1419,12 +1400,6 @@ public class OlympicDB {
         }
     }
 
-
-     /*listAthletePlacement
-     * calls list_athlete_placement function with user input
-     * inputs: participant_id
-     * returns table of placements
-     */
     public void listAthletePlacement(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1488,12 +1463,6 @@ public class OlympicDB {
             rs = properCase.executeQuery();
             System.out.print("Top " + k + "sports in last " + x + " years:  \n\n\n");
            
-            /*
-             * sport_id   INTEGER,
-            sport_name VARCHAR(30),
-            team_count BIGINT
-
-             */
             while(rs.next() ){
 
                 int sportID = rs.getInt("sport_id");
