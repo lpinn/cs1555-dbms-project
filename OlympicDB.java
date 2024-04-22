@@ -1,4 +1,5 @@
 import java.util.Properties;
+import java.util.ArrayList;
 
 import java.sql.*;
 import java.util.NoSuchElementException;
@@ -804,7 +805,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_venues_in_olympiad ( ? }");
+            properCase = conn.prepareCall("{ SELECT * list_venues_in_olympiad ( ? }");
         
         
             System.out.println("Enter olympiad id: ");
@@ -840,7 +841,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_events_of_olympiad ( ?) }");
+            properCase = conn.prepareCall("{ SELECT *  list_events_of_olympiad ( ?) }");
         
         
             System.out.println("Enter olympiad id: ");
@@ -886,7 +887,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_teams_in_event ( ?) }");
+            properCase = conn.prepareCall("{ SELECT * list_teams_in_event ( ?) }");
         
         
             System.out.println("Enter event id: ");
@@ -1123,7 +1124,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL top_sports ( ?, ?) }");
+            properCase = conn.prepareCall("{ SELECT * top_sports ( ?, ?) }");
         
         
             System.out.println("Enter the number of years to search (x): ");
@@ -1168,6 +1169,39 @@ public class OlympicDB {
         }
     }
 
+    public void connectedCoaches(){        
+        CallableStatement properCase = null;
+        ResultSet rs = null;
+        
+        try {
+            properCase = conn.prepareCall("{ SELECT connected_coaches ( ?, ?) }");
+        
+        
+            System.out.println("Enter the first coach's ID (c1): ");
+            int c1 = Integer.parseInt(br.readLine());
 
+            System.out.println("Enter the second coach's ID (c2): ");
+            int c2 = Integer.parseInt(br.readLine());
+            
+            properCase.setInt(1, c1);
+            properCase.setInt(2, c2);
+            
+            rs = properCase.executeQuery();
+
+            String connection = rs.getString("connected_coaches");
+            System.out.println("Coach connection: " + connection);
+            
+
+            System.out.println("Listed top sports in olympics\n");
+        } catch (NoSuchElementException ex) {
+            System.err.println("No lines were read from user input, please try again " + ex.getMessage());
+        } catch (IllegalArgumentException ex) {
+            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+        } catch (SQLException ex) {
+            System.err.println("SQL Exception E " + ex.getMessage()); 
+        } catch (IOException ex) {
+            System.err.println("IO Exception E" + ex.getMessage());
+        }
+    }
     
 }

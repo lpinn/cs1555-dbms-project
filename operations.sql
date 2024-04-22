@@ -347,7 +347,17 @@ RETURNS TABLE(
     )
 as
 $$
+    DECLARE 
+        on_check INTEGER;
     BEGIN
+
+        SELECT COUNT(*) INTO on_check
+        FROM olympic_schema.olympiad o
+        WHERE o.olympiad_num = olympiad_id;
+        
+        IF on_check = 0 THEN
+            RAISE EXCEPTION 'Olympiad num is not valid';
+        end if;
 
         RETURN QUERY SELECT V.venue_name, V.capacity
             FROM olympic_schema.VENUE AS V
