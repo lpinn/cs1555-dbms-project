@@ -1,8 +1,8 @@
 /* 1 - CREATE ACCOUNT */
-CREATE OR REPLACE PROCEDURE create_account(
+CREATE OR REPLACE FUNCTION create_account(
     IN username VARCHAR(30),
     IN passkey VARCHAR(30),
-    IN role VARCHAR(12))
+    IN role VARCHAR(12)) RETURNS boolean
     LANGUAGE plpgsql
 AS
 $$
@@ -10,8 +10,10 @@ DECLARE
 BEGIN
     --Inserting into olympic_schema.ACCOUNT--
     INSERT INTO olympic_schema.ACCOUNT(username, passkey, role, last_login)
-    VALUES (username, passkey, role, current_timestamp);
+        VALUES (username, passkey, role, current_timestamp);
     RAISE NOTICE 'Account added successfully.';
+
+    RETURN true;
 
 EXCEPTION
     --If someone tries to insert an ACCOUNT with an already existing name - raise EXCEPTION
@@ -22,12 +24,12 @@ EXCEPTION
     WHEN check_violation THEN
         RAISE EXCEPTION 'Domain check is violated - make sure role is one of these values: [Participant, Guest, Organizer]';
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'Generic Error: % %', SQLERRM;
+        RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 END
 $$;
 
 /* 2 - REMOVE ACCOUNT */
-/* We're assuming that deleting account doesn't delete participants and that participants can exist 
+/* We're assuming that deleting account doesn't delete participants and that participants can exist
    without accounts
 */
 CREATE OR REPLACE PROCEDURE olympic_schema.remove_account(
@@ -41,13 +43,13 @@ AS $$
         --First update and set account to null in participant--
         UPDATE olympic_schema.participant
             SET account = NULL
-        WHERE account_id = aid;
+        WHERE account = aid;
 
-        --Then delete the account 
+        --Then delete the account
         DELETE FROM olympic_schema.account
         WHERE olympic_schema.account.account_id = aid;
 
-        --Check if a row was deleted, if it was then the account was removed properly, or did not exist-- 
+        --Check if a row was deleted, if it was then the account was removed properly, or did not exist--
         GET DIAGNOSTICS row_check = ROW_COUNT;
 
         if(row_check = 0) then
@@ -66,7 +68,7 @@ AS $$
 $$;
 
 /* 3. - ADD PARTICIPANT */
-CREATE PROCEDURE add_participant(
+CREATE OR REPLACE FUNCTION add_participant (
     IN account_id INTEGER,
     IN first VARCHAR(30),
     IN middle VARCHAR(30),
@@ -74,18 +76,38 @@ CREATE PROCEDURE add_participant(
     IN birth_country CHAR(3),
     IN dob TIMESTAMP,
     IN gender VARCHAR(1)
-)
+) RETURNS BOOLEAN
 LANGUAGE plpgsql
 AS $$
+    DECLARE
+        account_check INTEGER;
     BEGIN
         --Similar to create_account--
-        INSERT INTO olympic_schema.PARTICIPANT(account, first, middle, last, birth_country, dob, gender)
-            VALUES(account_id, first, middle, last, birth_country, dob, gender);
-        RAISE NOTICE 'Participant added successfully.';
+		SELECT COUNT(account_id) INTO account_check
+		FROM olympic_schema.PARTICIPANT p
+		WHERE p.account = account_id;
+
+        IF(account_check = 1) THEN
+            RAISE EXCEPTION 'Participant already exists with given account id, please try again';
+        ELSE
+            INSERT INTO olympic_schema.PARTICIPANT(account, first, middle, last, birth_country, dob, gender)
+                VALUES(account_id, first, middle, last, birth_country, dob, gender);
+        END IF;
+        RETURN true;
 
     EXCEPTION
+        WHEN string_data_right_truncation THEN
+            RAISE EXCEPTION 'Either/or both username and password are too long, ensure that they are 30 characters or less';
+	    WHEN foreign_key_violation THEN
+            IF SQLERRM LIKE '%participant_account_fk%' THEN
+                RAISE EXCEPTION 'Account id is not valid';
+            ELSIF SQLERRM LIKE '%participant_country_fk%' THEN
+                RAISE EXCEPTION 'Country is not valid';
+            END IF;
+        WHEN check_violation THEN
+            RAISE EXCEPTION 'Domain check is violated - make sure you enter either M or F in this scenario.';
         WHEN OTHERS THEN
-            RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+            RAISE EXCEPTION '%', SQLERRM;
     END
 $$;
 
@@ -97,12 +119,12 @@ LANGUAGE plpgsql
 AS $$
     DECLARE
     --Using a CTE to remove participant--
-    --ON DELETE CASCADE is included in the schema but I initially implemented this operation 
-    --with a CTE. After testing, to me, it doesn't seem like DELETING the account after the 
-    --initial WITH query is causing any problems. 
+    --ON DELETE CASCADE is included in the schema but I initially implemented this operation
+    --with a CTE. After testing, to me, it doesn't seem like DELETING the account after the
+    --initial WITH query is causing any problems.
 
-    --It might be redundant, however due to include different types of queries, I decided to 
-    --keep this. I understand that it would be fine to not use a CTE in this case. 
+    --It might be redundant, however due to include different types of queries, I decided to
+    --keep this. I understand that it would be fine to not use a CTE in this case.
     BEGIN
         WITH participant_removal AS (
             DELETE FROM olympic_schema.participant
@@ -113,8 +135,10 @@ AS $$
         WHERE olympic_schema.account.account_id in (select participant_removal.account from participant_removal);
 
     EXCEPTION
+        WHEN foreign_key_violation THEN
+            RAISE EXCEPTION 'Foreign key violation.';
         WHEN OTHERS THEN
-            RAISE EXCEPTION 'Error - checking: %', SQLERRM;
+            RAISE EXCEPTION 'Error: %', SQLERRM;
 
     END
 $$;
@@ -125,14 +149,52 @@ CREATE OR REPLACE PROCEDURE add_team_member(
     IN participant INTEGER)
 LANGUAGE plpgsql
 AS $$
+    DECLARE
+        participant_c VARCHAR;
+        team_c VARCHAR;
+        ts INTEGER;
+        current_ts INTEGER;
     BEGIN
-        --inserting into team member 
-        INSERT INTO olympic_schema.TEAM_MEMBERS(team, participant)
-            VALUES(team, participant);
-        RAISE NOTICE 'Team member added successfully.';
+        SELECT birth_country INTO participant_c
+        FROM olympic_schema.PARTICIPANT p
+        WHERE p.participant_id = participant;
 
-    --otherwise handle exceptions 
+        SELECT country INTO team_c
+        FROM olympic_schema.TEAM t
+        WHERE t.team_id = team;
+
+        IF participant_c = team_c THEN
+            SELECT COUNT(*) INTO current_ts
+            FROM team_members t
+            WHERE add_team_member.team = t.team
+            AND add_team_member.participant != t.participant;
+
+            SELECT team_size INTO ts
+            FROM sport s JOIN team t
+            ON s.sport_id = t.sport;
+
+            IF current_ts < ts THEN
+                INSERT INTO olympic_schema.TEAM_MEMBERS(team, participant)
+                    VALUES(team, participant);
+            ELSE
+                RAISE EXCEPTION 'Team is full';
+            END IF;
+        ELSE
+            RAISE EXCEPTION 'Participants country does not match teams country';
+        END IF;
+
+        --inserting into team member
+
+    --otherwise handle exceptions
     EXCEPTION
+        WHEN unique_violation THEN
+            RAISE EXCEPTION 'Unique constraint failed, team member already exists within that team';
+        WHEN foreign_key_violation THEN
+            IF SQLERRM LIKE '%tm_participant_fk%' THEN
+                RAISE EXCEPTION 'participant id is not valid';
+            ELSIF SQLERRM LIKE '%tm_team_fk%' THEN
+                RAISE EXCEPTION 'team id is not valid';
+            END IF;
         WHEN OTHERS THEN
             RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 

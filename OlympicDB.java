@@ -1,12 +1,13 @@
 import java.util.Properties;
 
-
 import java.sql.*;
 import java.util.NoSuchElementException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 public class OlympicDB {
     private String user;
@@ -113,7 +114,7 @@ public class OlympicDB {
                             System.out.println("You need to connect to a DB first."); 
                         } else {
                             System.out.println("Removing a team member...");
-                            od.callRemoveAccount();
+                            od.callRemoveTeamMember();
                         }
                     break;
                 
@@ -123,7 +124,7 @@ public class OlympicDB {
                         System.out.println("You need to connect to a DB first."); 
                     } else {
                         System.out.println("Registering a new team!");
-                        od.callRemoveAccount();
+                        od.callRegisterTeam();
                     }
                     break;
 
@@ -360,7 +361,7 @@ public class OlympicDB {
 
     }
 
-    public void callCreateAccount(){        
+    public void callCreateAccount() {        
         CallableStatement properCase = null;
         try {
             properCase = conn.prepareCall("{ ? = CALL create_account( ?, ?, ? ) }");
@@ -371,6 +372,10 @@ public class OlympicDB {
             String password = br.readLine();
             System.out.print("Enter role: ");
             String role = br.readLine();
+
+            if(username.length() == 0 || password.length() == 0 || role.length() == 0){
+                throw new Exception("Input for one or more variables was empty, please input actual information.");
+            }
 
             Boolean rReturn;
 
@@ -390,13 +395,15 @@ public class OlympicDB {
             }
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+											   
+																																												 
         } catch (SQLException ex) {
-            System.err.println("SQL Exception E " + ex.getMessage()); 
+            System.err.println(ex.getMessage()); 
         } catch (IOException ex) {
-            System.err.println("IO Exception E" + ex.getMessage());
-        }  
+            System.err.println(ex.getMessage());
+        } catch (Exception ex){
+            System.err.println(ex.getMessage());
+        }
     }
 
     public void callRemoveAccount(){        
@@ -414,12 +421,14 @@ public class OlympicDB {
             System.out.println("Successfully removed account"); 
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+											   
+																																												 
         } catch (SQLException ex) {
-            System.err.println("SQL Exception E " + ex.getMessage()); 
+            System.err.println(ex.getMessage()); 
         } catch (IOException ex) {
             System.err.println("IO Exception E" + ex.getMessage());
+        } catch (NumberFormatException ex){
+            System.err.println("Please enter a number" + ex.getMessage());
         }
     }
 
@@ -440,7 +449,9 @@ public class OlympicDB {
             String country = br.readLine();
             System.out.print("Enter date of birth (in this format - YYYY-MM-DD): ");
             String t = br.readLine();
-            Timestamp dob = Timestamp.valueOf(t);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date dob = sdf.parse(t);
+
             System.out.print("Enter gender (M/F): ");
             String gender = br.readLine();
 
@@ -452,7 +463,7 @@ public class OlympicDB {
             properCase.setString(4, middle);
             properCase.setString(5, last);
             properCase.setString(6, country);
-            properCase.setTimestamp(7, dob);
+            properCase.setDate(7, new Date(dob.getTime()));
             properCase.setString(8, gender);
 
             properCase.execute();
@@ -469,9 +480,11 @@ public class OlympicDB {
         } catch (IllegalArgumentException ex) {
             System.err.println("Illegal Argument Exception E " + ex.getMessage());
         } catch (SQLException ex) {
-            System.err.println("SQL Exception E " + ex.getMessage()); 
+            System.err.println(ex.getMessage()); 
         } catch (IOException ex) {
-            System.err.println("IO Exception E" + ex.getMessage());
+            System.err.println("IO Exception E " + ex.getMessage());
+        } catch (ParseException ex) {
+            System.err.println("Parse Exception E " + ex.getMessage());
         }
     }
 
@@ -491,8 +504,8 @@ public class OlympicDB {
 
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+											   
+																																												 
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
@@ -528,8 +541,8 @@ public class OlympicDB {
 
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
+											   
+																																												 
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {

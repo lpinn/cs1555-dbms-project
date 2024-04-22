@@ -114,10 +114,7 @@ CREATE TABLE olympic_schema.PARTICIPANT
     CONSTRAINT PARTICIPANT_COUNTRY_FK
         FOREIGN KEY (birth_country) REFERENCES olympic_schema.COUNTRY(country_code),
     CONSTRAINT PARTICIPANT_ACCOUNT_FK
-        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id) ON DELETE SET NULL,
-    CONSTRAINT PARTICIPANT_ACCOUNT_UN
-        UNIQUE (account)
-    
+        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id) ON DELETE SET NULL
 );
 
 /* TEAM */
@@ -197,7 +194,7 @@ CREATE TABLE olympic_schema.VENUE
 */
 CREATE TABLE olympic_schema.EVENT
 (
-    event_id INTEGER,
+    event_id SERIAL,
     venue VARCHAR(30) NOT NULL,
     olympiad VARCHAR(30) NOT NULL,
     sport INTEGER NOT NULL,
@@ -241,7 +238,7 @@ CREATE TABLE olympic_schema.PLACEMENT
     CONSTRAINT PLACEMENT_EVENT_FK
         FOREIGN KEY (event) REFERENCES olympic_schema.EVENT(event_id),
     CONSTRAINT PLACEMENT_TEAM_FK
-        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id),
+        FOREIGN KEY (team) REFERENCES olympic_schema.TEAM(team_id) ON DELETE CASCADE,
     CONSTRAINT PLACEMENT_MEDAL_FK
         FOREIGN KEY (medal) REFERENCES olympic_schema.MEDAL(type)
 );
