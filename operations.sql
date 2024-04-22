@@ -301,11 +301,39 @@ alter procedure  add_team_to_event(integer, integer) owner to postgres;
 /* need to add medal considerations -- handeled by trigger?
  * need to add no-event considerations
  */
+
+CREATE OR REPLACE FUNCTION check_num_events()
+RETURNS TABLE(
+    check_event boolean;
+)
+AS
+$$
+    BEGIN
+        
+        SELECT COUNT(*) INTO event_check
+        FROM olympic_schema.EVENT;
+        
+        IF event_check < 1 THEN
+            RETURN FALSE;
+        ELSE
+            RETURN TRUE;
+        END IF;
+    END;
+$$ LANGUAGE plpgsql;
+
 create or replace procedure add_event_outcome(IN outcome_event integer, IN outcome_team integer, IN outcome_position integer)
     language  plpgsql
 as
 $$
     BEGIN
+
+        SELECT COUNT(*) INTO event_check
+        FROM olympic_schema.EVENT;
+        
+        IF event_check < 1 THEN
+            RAISE EXCEPTION 'No Outcomes were added since there are no Events';
+        end if;
+
         UPDATE olympic_schema.PLACEMENT
         SET position = outcome_position
         WHERE team = outcome_team AND event = outcome_event;
@@ -354,7 +382,7 @@ $$
         SELECT COUNT(*) INTO on_check
         FROM olympic_schema.olympiad o
         WHERE o.olympiad_num = olympiad_id;
-        
+
         IF on_check = 0 THEN
             RAISE EXCEPTION 'Olympiad num is not valid';
         end if;

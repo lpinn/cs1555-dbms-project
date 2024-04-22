@@ -734,11 +734,21 @@ public class OlympicDB {
     // need to add medal considerations and no events considerations
     public void addEventOutcome(){        
         CallableStatement properCase = null;
+        CallableStatement checkEvents = null;
+        ResultSet rs = null;
         try {
             boolean keepAdding = true;
             while(keepAdding){
                 
-            
+                checkEvents = conn.prepareCall("{SELECT check_num_events()}");
+                rs = checkEvents.executeQuery();
+
+                boolean eventsNum = rs.getBoolean("check_event");
+                if(eventsNum == false){
+                    System.out.println("No Outcomes were added since there are no Events");
+                }
+
+
                 properCase = conn.prepareCall("{ CALL add_team_to_event ( ?, ?, ?) }");
             
                 System.out.println("Enter event id: ");
