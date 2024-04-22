@@ -1229,7 +1229,7 @@ public class OlympicDB {
             properCase.setInt(2, k);
             
             rs = properCase.executeQuery();
-            System.out.print("Top " + k + "sports in last " + x + " years:  \n\n\n");
+            System.out.print("Top " + k + " sports in last " + x + " years:  \n\n\n");
            
             /*
              * sport_id   INTEGER,
