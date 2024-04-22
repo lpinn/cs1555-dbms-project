@@ -552,20 +552,57 @@ public class OlympicDB {
 
     public void callRemoveTeamMember(){        
         CallableStatement properCase = null;
-        try {
-            properCase = conn.prepareCall("{ CALL remove_team_member ( ?, ? ) }");
+        PreparedStatement st = null; 
+        int num = 0;
         
-            System.out.print("Enter team id: ");
+        ArrayList<Integer> valid = new ArrayList<>(); 
+        try {
+            System.out.print("Please enter a team_id: "); 
             int team_id = Integer.parseInt(br.readLine());
-            System.out.print("Enter participant id: ");
-            int participant_id = Integer.parseInt(br.readLine());
-            
-            properCase.setInt(1, participant_id);
-            properCase.setInt(2, team_id);
-            
-            properCase.execute();
 
-            System.out.println("Removed team member\n");
+            st = conn.prepareStatement("SELECT * FROM olympic_schema.team_members tm WHERE tm.team = ? ORDER BY participant ASC"); 
+            st.setInt(1, team_id); 
+
+            ResultSet rs = st.executeQuery(); 
+
+            int pos = rs.getRow(); 
+            int ti, pi = 0;
+
+            System.out.println("----------");
+            System.out.println("team" + "   " + "participant");
+
+            while(rs.next()){
+                //pos = rs.getRow(); 
+                ti = rs.getInt("team"); 
+                pi = rs.getInt("participant");
+                num++; 
+                valid.add(pi);
+                System.out.println(ti + "     " + pi); 
+            }
+
+            if(valid.size() != 0){
+                System.out.println("Would you like to remove a participant? Press participant_id to remove, or press -1:"); 
+                int remove_pid = Integer.parseInt(br.readLine());
+
+                if(valid.contains(remove_pid)){
+                    System.out.println("Please confirm by typing yes if you would like to remove, or no if not: "); 
+                    String confirmation = (br.readLine());
+
+                    if(confirmation.equals("Yes") || confirmation.equals("yes")){
+                        properCase = conn.prepareCall("{ CALL remove_team_member ( ?, ? ) }");
+                        
+                        properCase.setInt(1, remove_pid);
+                        properCase.setInt(2, team_id);
+                        
+                        properCase.execute();
+
+                        System.out.println("Removed team member\n");
+                    } 
+                }
+            } else {
+                System.out.println("No participants are currently members of the Team");
+            }
+
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
@@ -573,8 +610,8 @@ public class OlympicDB {
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
-            System.err.println("IO Exception E" + ex.getMessage());
-        }
+          System.err.println("IO Exception E" + ex.getMessage());
+        } 
     }
 
     public void callRegisterTeam(){        
@@ -879,15 +916,12 @@ public class OlympicDB {
         }
     }
 
-
-
     public void showPlacementsInEvent(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL show_placements_in_event ( ?) }");
-        
+            properCase = conn.prepareCall("SELECT * FROM show_placements_in_event ( ?)");
         
             System.out.println("Enter event id: ");
             int event_id = Integer.parseInt(br.readLine());
@@ -915,8 +949,6 @@ public class OlympicDB {
             System.out.println("Listed placements in event\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
@@ -924,14 +956,12 @@ public class OlympicDB {
         }
     }
 
-
-
     public void listParticipantsOnTeam(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL list_participants_on_team ( ? ) }");
+            properCase = conn.prepareCall("SELECT * FROM list_participants_on_team ( ? )");
         
         
             System.out.println("Enter team id: ");
@@ -989,18 +1019,20 @@ public class OlympicDB {
     public void listCountryPlacementsInOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
+        int num = 0;
+        StringBuilder sb = new StringBuilder();
         
         try {
-            properCase = conn.prepareCall("{ CALL list_country_placements_in_olympiad ( ?, ? ) }");
+            properCase = conn.prepareCall("SELECT * FROM list_country_placements_in_olympiad ( ?, ? )");
         
         
             System.out.println("Enter olympiad id: ");
-            int olympiad_id = Integer.parseInt(br.readLine());
+            String olympiad_id = (br.readLine());
             System.out.println("Enter country code: ");
             String country_code = br.readLine();
             
 
-            properCase.setInt(1, olympiad_id);
+            properCase.setString(1, olympiad_id);
             properCase.setString(2, country_code);
             
             rs = properCase.executeQuery();
@@ -1008,37 +1040,42 @@ public class OlympicDB {
            
         
             while(rs.next() ){
+                num++; 
 
                 int event = rs.getInt("event_id");
                 int team = rs.getInt("team");
                 String medal = rs.getString("medal");
                 int position = rs.getInt("position_id");
 
-                System.out.println("Event ID is : " + event);
-                System.out.println("Team ID is: "+ team);
-                System.out.println("Event gender is: "+ medal);
-                System.out.println("Event date is: "+ position);
-                System.out.println();
+                sb.append("Event ID is : " + event + "\n");
+                sb.append("Team ID is: "+ team + "\n");
+                sb.append("Event gender is: "+ medal + "\n");
+                sb.append("Event date is: "+ position + "\n");
+            }
+
+            if(num == 0){
+                System.out.println("No placements found.");
+            } else {
+                System.out.println(sb.toString());
             }
 
             System.out.println("Listed country placements in olympiad\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
             System.err.println("IO Exception E" + ex.getMessage());
         }
     }
-
     public void listAthletePlacement(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
+        int num = 0;
+        StringBuilder sb = new StringBuilder(); 
         
         try {
-            properCase = conn.prepareCall("{ CALL list_athlete_placement ( ?) }");
+            properCase = conn.prepareCall("SELECT * FROM list_athlete_placement ( ? )");
         
         
             System.out.println("Enter participant id: ");
@@ -1046,29 +1083,34 @@ public class OlympicDB {
             
             properCase.setInt(1, participant_id);
             
+            
             rs = properCase.executeQuery();
             System.out.print("Placements in event " + participant_id + ":  \n\n\n");
            
         
             while(rs.next() ){
+                num++; 
 
                 int event = rs.getInt("event_id");
                 int team = rs.getInt("team");
                 String medal = rs.getString("medal");
                 int position = rs.getInt("position_id");
 
-                System.out.println("Event ID is : " + event);
-                System.out.println("Team ID is: "+ team);
-                System.out.println("Event medal is: "+ medal);
-                System.out.println("Event position is: "+ position);
-                System.out.println();
+                sb.append("Event ID is : " + event + "\n");
+                sb.append("Team ID is: "+ team + "\n");
+                sb.append("Event medal is: "+ medal + "\n");
+                sb.append("Event position is: "+ position + "\n");
+            }
+
+            if(num == 0){
+                System.out.println("No placements found.");
+            } else {
+                System.out.println(sb.toString());
             }
 
             System.out.println("Listed athlete placements in olympics\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {

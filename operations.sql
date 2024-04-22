@@ -325,11 +325,7 @@ create or replace procedure disqualify_team(IN disqualify_team integer)
 as
 $$
     BEGIN
-        UPDATE olympic_schema.PLACEMENT
-            SET position = -1
-            WHERE team = disqualify_team;
-
-        UPDATE olympic_schema.team
+	UPDATE olympic_schema.team
             SET eligible = FALSE
             WHERE team_id = disqualify_team;
 
@@ -380,7 +376,16 @@ RETURNS TABLE(
     )
 as
 $$
+    DECLARE
+        on_check INTEGER;
     BEGIN
+        SELECT COUNT(*) INTO on_check
+        FROM olympic_schema.olympiad o
+        WHERE o.olympiad_num = olympiad_id;
+
+        IF on_check = 0 THEN
+            RAISE EXCEPTION 'Olympiad num is not valid';
+        end if;
 
         RETURN QUERY SELECT E.event_id, E.venue, E.olympiad, E.sport, E.gender, E.date
             FROM olympic_schema.EVENT AS E
@@ -388,7 +393,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -396,24 +401,33 @@ $$  language plpgsql;
 CREATE OR REPLACE FUNCTION listTeamsInEvent(event_id integer)
 RETURNS TABLE(
         team_id integer
-        ---olympiad varchar(30),
-        ---sport integer,
-        --coach integer,
-       --- country char(3),
-        ---gender olympiad_schema.team_gender_check,
-        ---eligible boolean
     )
 as
 $$
-
+    DECLARE
+        e_check INTEGER;
+        ee INTEGER;
     BEGIN
+        ee = event_id;
+        IF event_id < 0 THEN
+            RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
+
+        SELECT COUNT(*) INTO e_check
+        FROM olympic_schema.event e
+        WHERE e.event_id = ee;
+
+        IF e_check = 0 THEN
+            RAISE EXCEPTION 'Event_id does not exist';
+        END IF;
+
         RETURN QUERY SELECT P.team
             FROM olympic_schema.PLACEMENT AS P
             WHERE event_id = P.event;
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -428,8 +442,22 @@ RETURNS TABLE(
     )
 as
 $$
-
+    DECLARE
+        e_check INTEGER;
+        ee INTEGER;
     BEGIN
+        ee = event_id;
+        IF event_id < 0 THEN
+            RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
+
+        SELECT COUNT(*) INTO e_check
+        FROM olympic_schema.event e
+        WHERE e.event_id = ee;
+
+        IF e_check = 0 THEN
+            RAISE EXCEPTION 'Event_id does not exist';
+        END IF;
         RETURN QUERY SELECT P.event, P.team, P.medal, P.position
             FROM olympic_schema.PLACEMENT AS P
             WHERE event_id = P.event;
@@ -437,7 +465,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -455,8 +483,20 @@ RETURNS TABLE(
     )
 as
 $$
----DECLARE
+    DECLARE
+        t_check INTEGER;
     BEGIN
+        IF team_this < 0 THEN
+            RAISE EXCEPTION 'Invalid team_id presented';
+        END IF;
+
+        SELECT COUNT(*) INTO t_check
+        FROM olympic_schema.team t
+        WHERE t.team_id = team_this;
+
+        IF t_check = 0 THEN
+            RAISE EXCEPTION 'Team_id does not exist';
+        END IF;
 
         RETURN QUERY ((SELECT P.participant_id, P.account, P.first, P.middle, P.last, P.birth_country, P.dob, P.gender
                             FROM olympic_schema.PARTICIPANT AS P
@@ -473,12 +513,12 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
 /* 17  show country placements in olympiad*/
-CREATE OR REPLACE FUNCTION list_country_placements_in_olympiad(olympic_id varchar(30), country_code char(3))
+CREATE OR REPLACE FUNCTION list_country_placements_in_olympiad(olympiad_id varchar(30), country_code char(3))
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
@@ -487,21 +527,41 @@ RETURNS TABLE(
     )
 AS
 $$
----DECLARE
+    DECLARE
+        on_check INTEGER;
+        c_check INTEGER;
+        cc VARCHAR;
     BEGIN
-        RETURN QUERY SELECT P.event, P.team, P.medal, P.position
-            FROM olympic_schema.PLACEMENT AS P
-            WHERE P.team IN (SELECT T.team_id
-                             FROM olympic_schema.TEAM AS T
-                             WHERE T.country = country_code)
-                AND P.event IN(SELECT E.event_id
-                               FROM olympic_schema.EVENT AS E
-                               WHERE E.olympiad = olympic_id);
+        cc = country_code;
 
+        SELECT COUNT(*) INTO on_check
+        FROM olympic_schema.olympiad o
+        WHERE o.olympiad_num = olympiad_id;
+
+        SELECT COUNT(*) INTO c_check
+        FROM olympic_schema.country c
+        WHERE cc = c.country_code;
+
+        IF on_check > 0 AND c_check > 0 THEN
+            RETURN QUERY SELECT P.event, P.team, P.medal, P.position
+                FROM olympic_schema.PLACEMENT AS P
+                WHERE P.team IN (SELECT T.team_id
+                                 FROM olympic_schema.TEAM AS T
+                                 WHERE T.country = country_code)
+                    AND P.event IN(SELECT E.event_id
+                                   FROM olympic_schema.EVENT AS E
+                                   WHERE E.olympiad = olympiad_id);
+
+        ELSIF on_check = 0 THEN
+            RAISE EXCEPTION 'Olympiad number is invalid';
+        ELSIF c_check = 0 THEN
+            RAISE EXCEPTION 'Country code is invalid';
+
+        END IF;
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -515,8 +575,23 @@ RETURNS TABLE(
     )
 as
 $$
----DECLARE
+    DECLARE
+        p_check INTEGER;
+	pid INTEGER;
     BEGIN
+	pid = participant_id;
+
+        IF participant_id < 0 THEN
+            RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
+
+	SELECT COUNT(*) INTO p_check
+        FROM olympic_schema.participant p
+        WHERE p.participant_id = pid;
+
+        IF p_check = 0 THEN
+            RAISE EXCEPTION 'Participant_id does not exist';
+        END IF;
 
         RETURN QUERY SELECT P.event, P.team, P.medal, P.position
             FROM olympic_schema.PLACEMENT AS P
@@ -526,6 +601,6 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
