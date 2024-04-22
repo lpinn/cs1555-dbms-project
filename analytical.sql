@@ -310,7 +310,7 @@ BEGIN
             FROM c4_view(c1,c2)
             LIMIT 1
             INTO c4;
-        connection := c1 ||' → ' || c3 || ' → ' || c4 || ' → ' || c2;
+        connection := c1 ||' to ' || c3 || ' to ' || c4 || ' to ' || c2;
         RETURN QUERY SELECT connection;
     ELSE
         connection := 'no path found';

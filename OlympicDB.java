@@ -1220,7 +1220,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT * top_sports ( ?, ?)");
+            properCase = conn.prepareCall("SELECT * FROM top_sports ( ?, ?)");
         
             int x = readInt(sc, "Enter the number of years to search (x): ");
             int k = readInt(sc, "Enter the number of teams to display (k): ");
@@ -1272,11 +1272,13 @@ public class OlympicDB {
             properCase.setInt(2, c2);
             
             rs = properCase.executeQuery();
-
-            String connection = rs.getString("connected_coaches");
-            System.out.println("Coach connection: " + connection);
+            while(rs.next()){
+                String connection = rs.getString("connect_string");
+                System.out.println("Coach connection: " + connection);
+            }
             
-            System.out.println("Listed top sports in olympics\n");
+            
+            System.out.println("Listed coach connections in olympics\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
