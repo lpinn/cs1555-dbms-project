@@ -424,8 +424,22 @@ RETURNS TABLE(
     )
 as
 $$
-
+    DECLARE
+        e_check INTEGER;
+        ee INTEGER;
     BEGIN
+        ee = event_id;
+        IF event_id < 0 THEN
+            RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
+
+        SELECT COUNT(*) INTO e_check
+        FROM olympic_schema.event e
+        WHERE e.event_id = ee;
+
+        IF e_check = 0 THEN
+            RAISE EXCEPTION 'Event_id does not exist';
+        END IF;
         RETURN QUERY SELECT P.event, P.team, P.medal, P.position
             FROM olympic_schema.PLACEMENT AS P
             WHERE event_id = P.event;
@@ -433,7 +447,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
