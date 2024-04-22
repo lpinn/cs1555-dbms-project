@@ -916,15 +916,12 @@ public class OlympicDB {
         }
     }
 
-
-
     public void showPlacementsInEvent(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ CALL show_placements_in_event ( ?) }");
-        
+            properCase = conn.prepareCall("SELECT * FROM show_placements_in_event ( ?)");
         
             System.out.println("Enter event id: ");
             int event_id = Integer.parseInt(br.readLine());
@@ -952,16 +949,12 @@ public class OlympicDB {
             System.out.println("Listed placements in event\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
             System.err.println("IO Exception E" + ex.getMessage());
         }
     }
-
-
 
     public void listParticipantsOnTeam(){        
         CallableStatement properCase = null;
