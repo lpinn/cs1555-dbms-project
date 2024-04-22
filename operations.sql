@@ -580,6 +580,7 @@ $$
 $$  language plpgsql;
 
 /* 17  show country placements in olympiad*/
+DROP FUNCTION IF EXISTS list_country_placements_in_olympiad;
 CREATE OR REPLACE FUNCTION list_country_placements_in_olympiad(olympiad_id varchar(30), country_code char(3))
 RETURNS TABLE(
         event_id INTEGER,
