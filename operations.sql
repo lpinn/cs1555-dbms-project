@@ -66,7 +66,7 @@ AS $$
 $$;
 
 /* 3. - ADD PARTICIPANT */
-CREATE PROCEDURE add_participant(
+CREATE OR REPLACE FUNCTION add_participant (
     IN account_id INTEGER,
     IN first VARCHAR(30),
     IN middle VARCHAR(30),
@@ -74,18 +74,31 @@ CREATE PROCEDURE add_participant(
     IN birth_country CHAR(3),
     IN dob TIMESTAMP,
     IN gender VARCHAR(1)
-)
+) RETURNS BOOLEAN
 LANGUAGE plpgsql
 AS $$
+    DECLARE
+        account_check INTEGER;
     BEGIN
         --Similar to create_account--
-        INSERT INTO olympic_schema.PARTICIPANT(account, first, middle, last, birth_country, dob, gender)
-            VALUES(account_id, first, middle, last, birth_country, dob, gender);
-        RAISE NOTICE 'Participant added successfully.';
+		SELECT COUNT(account_id) INTO account_check
+		FROM olympic_schema.PARTICIPANT p
+		WHERE p.account = account_id;
+
+        IF(account_check == 1) THEN
+            RAISE EXCEPTION 'Participant already exists with given account id, please try again';
+        ELSE
+            INSERT INTO olympic_schema.PARTICIPANT(account, first, middle, last, birth_country, dob, gender)
+                VALUES(account_id, first, middle, last, birth_country, dob, gender);
+            RAISE NOTICE 'Participant added successfully.';
+            RETURN true;
+        END IF;
 
     EXCEPTION
+        WHEN string_data_right_truncation THEN
+            RAISE EXCEPTION 'Either/or both username and password are too long, ensure that they are 30 characters or less';
         WHEN OTHERS THEN
-            RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+            RAISE EXCEPTION '%', SQLERRM;
     END
 $$;
 
