@@ -87,20 +87,23 @@ AS $$
 		FROM olympic_schema.PARTICIPANT p
 		WHERE p.account = account_id;
 
-        IF(account_check == 1) THEN
+        IF(account_check = 1) THEN
             RAISE EXCEPTION 'Participant already exists with given account id, please try again';
         ELSE
             INSERT INTO olympic_schema.PARTICIPANT(account, first, middle, last, birth_country, dob, gender)
                 VALUES(account_id, first, middle, last, birth_country, dob, gender);
-            RAISE NOTICE 'Participant added successfully.';
-            RETURN true;
         END IF;
+        RETURN true;
 
     EXCEPTION
         WHEN string_data_right_truncation THEN
             RAISE EXCEPTION 'Either/or both username and password are too long, ensure that they are 30 characters or less';
-	WHEN foreign_key_violation THEN
-            RAISE EXCEPTION 'Foreign key violation - Make sure you enter a valid Country Code';
+	    WHEN foreign_key_violation THEN
+            IF SQLERRM LIKE '%participant_account_fk%' THEN
+                RAISE EXCEPTION 'Account id is not valid';
+            ELSIF SQLERRM LIKE '%participant_country_fk%' THEN
+                RAISE EXCEPTION 'Country is not valid';
+            END IF;
         WHEN check_violation THEN
             RAISE EXCEPTION 'Domain check is violated - make sure you enter either M or F in this scenario.';
         WHEN OTHERS THEN
