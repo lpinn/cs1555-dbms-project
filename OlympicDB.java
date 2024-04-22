@@ -138,6 +138,7 @@ public class OlympicDB {
                         System.out.println("You need to connect to a DB first.");
                     } else {
                         System.out.println("Adding a new event!");
+                        od.addEvent(); 
                     }
                     
                     break;
