@@ -29,7 +29,7 @@ END
 $$;
 
 /* 2 - REMOVE ACCOUNT */
-/* We're assuming that deleting account doesn't delete participants and that participants can exist 
+/* We're assuming that deleting account doesn't delete participants and that participants can exist
    without accounts
 */
 CREATE OR REPLACE PROCEDURE olympic_schema.remove_account(
@@ -43,13 +43,13 @@ AS $$
         --First update and set account to null in participant--
         UPDATE olympic_schema.participant
             SET account = NULL
-        WHERE account_id = aid;
+        WHERE account = aid;
 
-        --Then delete the account 
+        --Then delete the account
         DELETE FROM olympic_schema.account
         WHERE olympic_schema.account.account_id = aid;
 
-        --Check if a row was deleted, if it was then the account was removed properly, or did not exist-- 
+        --Check if a row was deleted, if it was then the account was removed properly, or did not exist--
         GET DIAGNOSTICS row_check = ROW_COUNT;
 
         if(row_check = 0) then
