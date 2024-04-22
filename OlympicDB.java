@@ -552,20 +552,57 @@ public class OlympicDB {
 
     public void callRemoveTeamMember(){        
         CallableStatement properCase = null;
-        try {
-            properCase = conn.prepareCall("{ CALL remove_team_member ( ?, ? ) }");
+        PreparedStatement st = null; 
+        int num = 0;
         
-            System.out.print("Enter team id: ");
+        ArrayList<Integer> valid = new ArrayList<>(); 
+        try {
+            System.out.print("Please enter a team_id: "); 
             int team_id = Integer.parseInt(br.readLine());
-            System.out.print("Enter participant id: ");
-            int participant_id = Integer.parseInt(br.readLine());
-            
-            properCase.setInt(1, participant_id);
-            properCase.setInt(2, team_id);
-            
-            properCase.execute();
 
-            System.out.println("Removed team member\n");
+            st = conn.prepareStatement("SELECT * FROM olympic_schema.team_members tm WHERE tm.team = ? ORDER BY participant ASC"); 
+            st.setInt(1, team_id); 
+
+            ResultSet rs = st.executeQuery(); 
+
+            int pos = rs.getRow(); 
+            int ti, pi = 0;
+
+            System.out.println("----------");
+            System.out.println("team" + "   " + "participant");
+
+            while(rs.next()){
+                //pos = rs.getRow(); 
+                ti = rs.getInt("team"); 
+                pi = rs.getInt("participant");
+                num++; 
+                valid.add(pi);
+                System.out.println(ti + "     " + pi); 
+            }
+
+            if(valid.size() != 0){
+                System.out.println("Would you like to remove a participant? Press participant_id to remove, or press -1:"); 
+                int remove_pid = Integer.parseInt(br.readLine());
+
+                if(valid.contains(remove_pid)){
+                    System.out.println("Please confirm by typing yes if you would like to remove, or no if not: "); 
+                    String confirmation = (br.readLine());
+
+                    if(confirmation.equals("Yes") || confirmation.equals("yes")){
+                        properCase = conn.prepareCall("{ CALL remove_team_member ( ?, ? ) }");
+                        
+                        properCase.setInt(1, remove_pid);
+                        properCase.setInt(2, team_id);
+                        
+                        properCase.execute();
+
+                        System.out.println("Removed team member\n");
+                    } 
+                }
+            } else {
+                System.out.println("No participants are currently members of the Team");
+            }
+
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
@@ -573,8 +610,8 @@ public class OlympicDB {
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
-            System.err.println("IO Exception E" + ex.getMessage());
-        }
+          System.err.println("IO Exception E" + ex.getMessage());
+        } 
     }
 
     public void callRegisterTeam(){        
