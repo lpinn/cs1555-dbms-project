@@ -284,6 +284,7 @@ public class OlympicDB {
 
                 case "24":
                     System.out.println("Exiting the system...");
+                    od.exit();
                     loop = false;
                     break;
                 
@@ -411,6 +412,26 @@ public class OlympicDB {
         return sb.toString();
     }
 
+    public void closeStatement(Statement st){
+        if(st != null){
+            try {
+                st.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void closeRS(ResultSet rs){
+        if(rs != null){
+            try {
+                rs.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void loadJDBC() {
         try {
             Class.forName("org.postgresql.Driver");
@@ -509,6 +530,8 @@ public class OlympicDB {
             }
         } catch (Exception ex){
             System.err.println(ex.getMessage());
+        } finally {
+            closeStatement(properCase);
         }
     }
 
@@ -537,6 +560,8 @@ public class OlympicDB {
             }
         } catch (NumberFormatException ex){
             System.err.println("Please enter a number" + ex.getMessage());
+        } finally {
+            closeStatement(properCase);
         }
     }
 
@@ -584,74 +609,86 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
+        } finally {
+            closeStatement(properCase);
         }
     }
 
-    public void callRemoveParticipant(){        
+    public void callRemoveParticipant() {
         CallableStatement properCase = null;
-        ArrayList<Integer> pids = new ArrayList<Integer>();
-
         try {
             conn.setAutoCommit(false); 
             properCase = conn.prepareCall("{ CALL remove_participant( ? ) }");
 
-            String choice = readString(sc, "Would you like to remove ALL or SELECTED participants? Type all or selected:", 8, false); 
-        
-            if(choice.equals("all")){
-                choice = readString(sc, "Please confirm that you want to remove all participants by typing either yes or no: ", 5, false);
-                if(choice.equals("yes")){
-                    PreparedStatement st = conn.prepareStatement("DELETE FROM participant");
-                    st.execute(); 
-                    System.out.println("All participants removed successfully");
-                    st.close();
-                    conn.commit(); 
-                } else if(choice.equals("no")){
-                    System.out.println("We will not be removing participants"); 
-                }
-            } else if(choice.equals("selected")){
-                PreparedStatement st = conn.prepareStatement("SELECT participant_id FROM participant");
-                ResultSet rs = st.executeQuery();
+            String choice1 = readString(sc, "Would you like to remove ALL or SELECTED participants? Type all or selected:", 8,
+                    false);
 
-                while (rs.next()) {
-                    pids.add(rs.getInt("participant_id"));
-                }
-
-                for (Integer p : pids) {
-                    System.out.println(p);
-
-                    boolean validInput = false;
-
-                    int choice2 = 0;
-                    do {
-                        choice2 = readInt(sc, "Please enter the participant id to confirm deletion, 0 to skip the current record, or -1 to cancel: ");
-
-                        if (choice2 == p.intValue() || choice2 == -1 || choice2 == 0) {
-                            validInput = true;
-                        }
-                    } while (!validInput);
-
-                    if (choice2 == p.intValue()) {
-                        properCase.setInt(1, choice2);
-                        properCase.execute();
-
-                        conn.commit(); 
-                    } else if (choice2 == 0) {
-                        continue;
-                    } else if (choice2 == -1) {
-                        System.out.println("Cancelling remove participant");
+            switch (choice1) {
+                case "all":
+                    String confirm = readString(sc, "Please confirm that you want to remove all participants by typing either yes or no: ", 3, false);
+                    switch (confirm) {
+                        case "Yes":
+                            PreparedStatement st = conn.prepareStatement("DELETE FROM PARTICIPANT");
+                            st.execute();
+                            System.out.println("All participants removed successfully");
+                            st.close();
+                            break;
+                        case "No":
+                            System.out.println("We will not be removing participants");
+                            break;
+                        default:
+                            break;
                     }
-                }
+                    break;
+                case "selected":
+                    PreparedStatement st = conn.prepareStatement("SELECT PARTICIPANT_ID FROM PARTICIPANT");
+                    ResultSet rs = st.executeQuery();
+                    ArrayList<Integer> pids = new ArrayList<Integer>();
+                    while (rs.next()) {
+                        pids.add(rs.getInt("participant_id"));
+                    }
+
+                    for (Integer p : pids) {
+                        System.out.println("Participant: " + p);
+
+                        boolean validInput = false;
+
+                        int confirm_id = 0;
+                        do {
+                            confirm_id = readInt(sc, "Please enter the participant id to confirm deletion or 0 to skip the current record or -1 to cancel: ");
+
+                            if (confirm_id == p.intValue() || confirm_id == -1 || confirm_id == 0) {
+                                validInput = true;
+                            }
+                        } while (!validInput);
+
+                        if (confirm_id == p.intValue()) {
+                            properCase.setInt(1, confirm_id);
+                            properCase.execute();
+                            System.out.println("Removed"); 
+                        } else if (confirm_id == 0) {
+                            continue;
+                        } else if (confirm_id == -1) {
+                            break;
+                        }
+                    }
+                    st.close();
+                    rs.close();
+                    break;
+                default:
+                    System.out.println("Invalid remove option");
+                    break;
             }
 
-        } catch (NoSuchElementException ex) {
-            System.err.println("No lines were read from user input, please try again " + ex.getMessage());																																								 
+            conn.commit();
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage());
             try {
                 conn.rollback();
-            } catch (SQLException e){
-                System.err.println(ex.getMessage()); 
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-        }
+        } 
     }
 
     public void callAddTeamMember(){        
@@ -687,6 +724,8 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
+        } finally {
+            closeStatement(properCase);
         }
     }
 
@@ -739,6 +778,7 @@ public class OlympicDB {
                         conn.commit(); 
                     } 
                 }
+                rs.close();
             } else {
                 System.out.println("No participants are currently members of the Team");
             }
@@ -752,6 +792,9 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
+        } finally {
+            closeStatement(st);
+            closeStatement(properCase);
         }
     }
 
@@ -796,7 +839,9 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
-        } 
+        } finally {
+            closeStatement(properCase);
+        }
     }
 
     public void addEvent(){        
@@ -830,7 +875,9 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
-        } 
+        } finally {
+            closeStatement(properCase);
+        }
     }
 
     public void addTeamToEvent(){        
@@ -858,7 +905,9 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
-        } 
+        } finally {
+            closeStatement(properCase);
+        }
     }
 
 
@@ -912,7 +961,11 @@ public class OlympicDB {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
+            closeStatement(checkEvents);
+        }
     }
 
     public void disqualifyTeam(){        
@@ -939,7 +992,9 @@ public class OlympicDB {
             } catch (SQLException e){
                 System.err.println(ex.getMessage()); 
             }
-        } 
+        } finally {
+            closeStatement(properCase);
+        }
     }
 
     public void listVenuesInOlympiad(){        
@@ -955,21 +1010,37 @@ public class OlympicDB {
             
             rs = properCase.executeQuery();
             System.out.print("Venues in olympiad " + olympiad_id + ":  \n\n\n");
+
+            StringBuffer output = new StringBuffer("");
+            output.append(rPad("Venue", 40));
+            output.append(rPad("Capacity", 10)).append("\n");
+
+            int i = 0;
             while(rs.next() ){
                 String venueName = rs.getString("venue_name");
                 int capacity = rs.getInt("capacity");
 
-                System.out.println("Venue name is : " + venueName);
-                System.out.println("Venue capacity is : "+ capacity);
-                System.out.println();
+                output.append(rPad(venueName, 40));
+                output.append(rPad(String.valueOf(capacity), 10)).append("\n");
+                i++;
             }
+
+            if (i == 0) {
+                System.out.println("No venues found for olympiad " + olympiad_id + "\n");
+            } else {
+                System.out.println(output.toString());
+            }
+
 
             System.out.println("listed venues\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs); 
+            closeStatement(properCase);
+        }
     }
 
     public void listEventsOfOlympiad(){        
@@ -977,7 +1048,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT *  from list_events_of_olympiad ( ? )");
+            properCase = conn.prepareCall("SELECT * FROM list_events_of_olympiad ( ? )");
         
             String olympiad_id = readString(sc, "Enter olympiad id: ", 30, false);
 
@@ -985,6 +1056,14 @@ public class OlympicDB {
             
             rs = properCase.executeQuery();
             System.out.print("Events of olympiad " + olympiad_id + ":  \n\n\n");
+
+            StringBuffer output = new StringBuffer("");
+            output.append(rPad("Event ID", 20));
+            output.append(rPad("Venue", 35));
+            output.append(rPad("Olympiad Num", 20));
+            output.append(rPad("Sport ID", 20));
+            output.append(rPad("Event Gender", 20));
+            output.append(rPad("Event Date", 20)).append("\n");
            
             while(rs.next() ){
                 int event_id = rs.getInt("event_id");
@@ -994,21 +1073,25 @@ public class OlympicDB {
                 String gender = rs.getString("gender");
                 Timestamp date = rs.getTimestamp("date");
 
-                System.out.println("Event ID is : " + event_id);
-                System.out.println("Venue name is : "+ venue);
-                System.out.println("Olympiad number is: "+ olympiad_num);
-                System.out.println("Sport ID is: "+ sport);
-                System.out.println("Event gender is: "+ gender);
-                System.out.println("Event date is: "+ date.toString());
-                System.out.println();
+                output.append(rPad(String.valueOf(event_id), 20));
+                output.append(rPad(venue, 35));
+                output.append(rPad(olympiad_num, 20));
+                output.append(rPad(String.valueOf(sport), 20));
+                output.append(rPad(gender, 20));
+                output.append(rPad(date.toString(), 20)).append("\n");
             }
+
+            System.out.println(output.toString());
 
             System.out.println("Listed events in olympiad\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
+        }
     }
 
     public void listTeamsInEvent(){        
@@ -1024,18 +1107,26 @@ public class OlympicDB {
             
             rs = properCase.executeQuery();
             System.out.print("Teams in event " + event_id + ":  \n\n\n");
+
+            StringBuffer output = new StringBuffer("");
+            output.append(rPad("Team ID", 20)).append("\n");
+
             while(rs.next() ){
                 int teamID = rs.getInt("team_id");
-                System.out.println("Team ID is : "+ teamID);
-                System.out.println();
+                output.append(rPad(String.valueOf(teamID), 10)).append("\n");
             }
+
+            System.out.println(output.toString()); 
 
             System.out.println("listed venues\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
+        }
     }
 
     public void showPlacementsInEvent(){        
@@ -1077,6 +1168,9 @@ public class OlympicDB {
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
             ex.printStackTrace();
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
         }
     }
 
@@ -1138,6 +1232,9 @@ public class OlympicDB {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println(ex.getMessage()); 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
         }
     }
 
@@ -1184,7 +1281,10 @@ public class OlympicDB {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
+        }
     }
 
     public void callCountryRankings() {
@@ -1215,12 +1315,14 @@ public class OlympicDB {
             } else {
                 System.out.println(output.toString());
             }
-    
+            rs.close(); 
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println(ex.getMessage()); 
-        } 
+        } finally {
+            closeStatement(st);
+        }
         
     }
 
@@ -1254,11 +1356,14 @@ public class OlympicDB {
             } else {
                 System.out.println(output.toString());
             }
+            rs.close();
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println(ex.getMessage()); 
-        } 
+        } finally {
+            closeStatement(st);
+        }
     }
 
     public void listAthletePlacement(){        
@@ -1302,7 +1407,10 @@ public class OlympicDB {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
+        }
     }
 
     public void topSports(){        
@@ -1344,6 +1452,9 @@ public class OlympicDB {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
         }
     }
 
@@ -1372,7 +1483,24 @@ public class OlympicDB {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
-        } 
+        } finally {
+            closeRS(rs);
+            closeStatement(properCase);
+        }
+    }
+
+    public void exit(){
+        if (conn != null) {
+            try {
+                conn.close();
+                sc.close();
+                br.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (IOException e){
+                System.out.println("IOException e");
+            }
+        }
     }
     
 }
