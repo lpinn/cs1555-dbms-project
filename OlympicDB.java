@@ -1026,18 +1026,20 @@ public class OlympicDB {
     public void listCountryPlacementsInOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
+        int num = 0;
+        StringBuilder sb = new StringBuilder();
         
         try {
-            properCase = conn.prepareCall("{ CALL list_country_placements_in_olympiad ( ?, ? ) }");
+            properCase = conn.prepareCall("SELECT * FROM list_country_placements_in_olympiad ( ?, ? )");
         
         
             System.out.println("Enter olympiad id: ");
-            int olympiad_id = Integer.parseInt(br.readLine());
+            String olympiad_id = (br.readLine());
             System.out.println("Enter country code: ");
             String country_code = br.readLine();
             
 
-            properCase.setInt(1, olympiad_id);
+            properCase.setString(1, olympiad_id);
             properCase.setString(2, country_code);
             
             rs = properCase.executeQuery();
@@ -1045,31 +1047,34 @@ public class OlympicDB {
            
         
             while(rs.next() ){
+                num++; 
 
                 int event = rs.getInt("event_id");
                 int team = rs.getInt("team");
                 String medal = rs.getString("medal");
                 int position = rs.getInt("position_id");
 
-                System.out.println("Event ID is : " + event);
-                System.out.println("Team ID is: "+ team);
-                System.out.println("Event gender is: "+ medal);
-                System.out.println("Event date is: "+ position);
-                System.out.println();
+                sb.append("Event ID is : " + event + "\n");
+                sb.append("Team ID is: "+ team + "\n");
+                sb.append("Event gender is: "+ medal + "\n");
+                sb.append("Event date is: "+ position + "\n");
+            }
+
+            if(num == 0){
+                System.out.println("No placements found.");
+            } else {
+                System.out.println(sb.toString());
             }
 
             System.out.println("Listed country placements in olympiad\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            System.err.println("The scanner was likely closed before reading the user's input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
             System.err.println("SQL Exception E " + ex.getMessage()); 
         } catch (IOException ex) {
             System.err.println("IO Exception E" + ex.getMessage());
         }
     }
-
     public void listAthletePlacement(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
