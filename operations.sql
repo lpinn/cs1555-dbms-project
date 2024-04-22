@@ -1,8 +1,8 @@
 /* 1 - CREATE ACCOUNT */
-CREATE OR REPLACE PROCEDURE create_account(
+CREATE OR REPLACE FUNCTION create_account(
     IN username VARCHAR(30),
     IN passkey VARCHAR(30),
-    IN role VARCHAR(12))
+    IN role VARCHAR(12)) RETURNS boolean
     LANGUAGE plpgsql
 AS
 $$
@@ -10,8 +10,10 @@ DECLARE
 BEGIN
     --Inserting into olympic_schema.ACCOUNT--
     INSERT INTO olympic_schema.ACCOUNT(username, passkey, role, last_login)
-    VALUES (username, passkey, role, current_timestamp);
+        VALUES (username, passkey, role, current_timestamp);
     RAISE NOTICE 'Account added successfully.';
+
+    RETURN true;
 
 EXCEPTION
     --If someone tries to insert an ACCOUNT with an already existing name - raise EXCEPTION
@@ -22,7 +24,7 @@ EXCEPTION
     WHEN check_violation THEN
         RAISE EXCEPTION 'Domain check is violated - make sure role is one of these values: [Participant, Guest, Organizer]';
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'Generic Error: % %', SQLERRM;
+        RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 END
 $$;
 
