@@ -135,6 +135,7 @@ public class OlympicDB {
                         System.out.println("You need to connect to a DB first.");
                     } else {
                         System.out.println("Adding a new event!");
+                        od.addEvent();
                     }
                     
                     break;
@@ -958,7 +959,7 @@ public class OlympicDB {
 
                 System.out.println("Event ID is : " + event);
                 System.out.println("Team ID is: "+ team);
-                System.out.println("Event gender is: "+ medal);
+                System.out.println("Event medal is: "+ medal);
                 System.out.println("Event date is: "+ position);
                 System.out.println();
             }
