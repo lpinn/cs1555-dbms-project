@@ -114,7 +114,7 @@ CREATE TABLE olympic_schema.PARTICIPANT
     CONSTRAINT PARTICIPANT_COUNTRY_FK
         FOREIGN KEY (birth_country) REFERENCES olympic_schema.COUNTRY(country_code),
     CONSTRAINT PARTICIPANT_ACCOUNT_FK
-        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id) ON DELETE SET NULL,
+        FOREIGN KEY (account) REFERENCES olympic_schema.ACCOUNT(account_id) ON DELETE SET NULL
 );
 
 /* TEAM */
