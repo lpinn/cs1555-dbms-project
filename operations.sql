@@ -474,7 +474,7 @@ $$
 $$  language plpgsql;
 
 /* 17  show country placements in olympiad*/
-CREATE OR REPLACE FUNCTION list_country_placements_in_olympiad(olympic_id varchar(30), country_code char(3))
+CREATE OR REPLACE FUNCTION list_country_placements_in_olympiad(olympiad_id varchar(30), country_code char(3))
 RETURNS TABLE(
         event_id INTEGER,
         team INTEGER,
@@ -483,21 +483,41 @@ RETURNS TABLE(
     )
 AS
 $$
----DECLARE
+    DECLARE
+        on_check INTEGER;
+        c_check INTEGER;
+        cc VARCHAR;
     BEGIN
-        RETURN QUERY SELECT P.event, P.team, P.medal, P.position
-            FROM olympic_schema.PLACEMENT AS P
-            WHERE P.team IN (SELECT T.team_id
-                             FROM olympic_schema.TEAM AS T
-                             WHERE T.country = country_code)
-                AND P.event IN(SELECT E.event_id
-                               FROM olympic_schema.EVENT AS E
-                               WHERE E.olympiad = olympic_id);
+        cc = country_code;
 
+        SELECT COUNT(*) INTO on_check
+        FROM olympic_schema.olympiad o
+        WHERE o.olympiad_num = olympiad_id;
+
+        SELECT COUNT(*) INTO c_check
+        FROM olympic_schema.country c
+        WHERE cc = c.country_code;
+
+        IF on_check > 0 AND c_check > 0 THEN
+            RETURN QUERY SELECT P.event, P.team, P.medal, P.position
+                FROM olympic_schema.PLACEMENT AS P
+                WHERE P.team IN (SELECT T.team_id
+                                 FROM olympic_schema.TEAM AS T
+                                 WHERE T.country = country_code)
+                    AND P.event IN(SELECT E.event_id
+                                   FROM olympic_schema.EVENT AS E
+                                   WHERE E.olympiad = olympiad_id);
+
+        ELSIF on_check = 0 THEN
+            RAISE EXCEPTION 'Olympiad number is invalid';
+        ELSIF c_check = 0 THEN
+            RAISE EXCEPTION 'Country code is invalid';
+
+        END IF;
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
