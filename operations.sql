@@ -451,8 +451,20 @@ RETURNS TABLE(
     )
 as
 $$
----DECLARE
+    DECLARE
+        t_check INTEGER;
     BEGIN
+        IF team_this < 0 THEN
+            RAISE EXCEPTION 'Invalid team_id presented';
+        END IF;
+
+        SELECT COUNT(*) INTO t_check
+        FROM olympic_schema.team t
+        WHERE t.team_id = team_this;
+
+        IF t_check = 0 THEN
+            RAISE EXCEPTION 'Team_id does not exist';
+        END IF;
 
         RETURN QUERY ((SELECT P.participant_id, P.account, P.first, P.middle, P.last, P.birth_country, P.dob, P.gender
                             FROM olympic_schema.PARTICIPANT AS P
@@ -469,7 +481,7 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
@@ -532,10 +544,21 @@ RETURNS TABLE(
 as
 $$
     DECLARE
-        participant_check INTEGER;
+        p_check INTEGER;
+	pid INTEGER;
     BEGIN
+	pid = participant_id;
+
         IF participant_id < 0 THEN
             RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
+
+	SELECT COUNT(*) INTO p_check
+        FROM olympic_schema.participant p
+        WHERE p.participant_id = pid;
+
+        IF p_check = 0 THEN
+            RAISE EXCEPTION 'Participant_id does not exist';
         END IF;
 
         RETURN QUERY SELECT P.event, P.team, P.medal, P.position
