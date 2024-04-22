@@ -16,9 +16,13 @@ BEGIN
 EXCEPTION
     --If someone tries to insert an ACCOUNT with an already existing name - raise EXCEPTION
     WHEN unique_violation THEN
-        RAISE NOTICE 'Unique constraint failed: %', SQLERRM;
+        RAISE EXCEPTION 'Unique constraint failed, username already exists';
+    WHEN string_data_right_truncation THEN
+        RAISE EXCEPTION 'Either/or both username and password are too long, ensure that they are 30 characters or less';
+    WHEN check_violation THEN
+        RAISE EXCEPTION 'Domain check is violated - make sure role is one of these values: [Participant, Guest, Organizer]';
     WHEN OTHERS THEN
-        RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+        RAISE EXCEPTION 'Generic Error: % %', SQLERRM;
 END
 $$;
 
