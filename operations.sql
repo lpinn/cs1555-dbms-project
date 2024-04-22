@@ -325,11 +325,7 @@ create or replace procedure disqualify_team(IN disqualify_team integer)
 as
 $$
     BEGIN
-        UPDATE olympic_schema.PLACEMENT
-            SET position = -1
-            WHERE team = disqualify_team;
-
-        UPDATE olympic_schema.team
+	UPDATE olympic_schema.team
             SET eligible = FALSE
             WHERE team_id = disqualify_team;
 
