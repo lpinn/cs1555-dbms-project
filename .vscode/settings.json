@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "c:\\Users\\sarah\\Downloads\\postgresql-42.7.3.jar"
+    ]
+}

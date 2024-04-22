@@ -27,7 +27,7 @@ public class OlympicDB {
 
     public static void main(String[] args){
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        OlympicDB od = new OlympicDB(br, "postgres", "cowcow2024"); 
+        OlympicDB od = new OlympicDB(br, "postgres", "Tr@um@-$ql"); 
 
         String menuOptions = ""; 
         menuOptions = od.getMenuOptions();
@@ -1189,7 +1189,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ SELECT connected_coaches ( ?, ?) }");
+            properCase = conn.prepareCall("{ SELECT * connected_coaches ( ?, ?) }");
         
         
             System.out.println("Enter the first coach's ID (c1): ");
@@ -1203,7 +1203,7 @@ public class OlympicDB {
             
             rs = properCase.executeQuery();
 
-            String connection = rs.getString("connected_coaches");
+            String connection = rs.getString("connected_string");
             System.out.println("Coach connection: " + connection);
             
 
