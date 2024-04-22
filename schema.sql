@@ -194,7 +194,7 @@ CREATE TABLE olympic_schema.VENUE
 */
 CREATE TABLE olympic_schema.EVENT
 (
-    event_id INTEGER,
+    event_id SERIAL,
     venue VARCHAR(30) NOT NULL,
     olympiad VARCHAR(30) NOT NULL,
     sport INTEGER NOT NULL,
