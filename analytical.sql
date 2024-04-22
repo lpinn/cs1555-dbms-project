@@ -107,11 +107,12 @@ $$
 
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS c_total();
 CREATE OR REPLACE FUNCTION c_total ()
 RETURNS TABLE
 (
     c_total_coach INTEGER,
-    c_total_olympiad INTEGER
+    c_total_olympiad VARCHAR(30)
 
 )
 AS
@@ -122,11 +123,12 @@ $$
     END;
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS c1_view(c1 integer);
 CREATE OR REPLACE FUNCTION c1_view(c1 integer)
 RETURNS TABLE
 (
     c1_view_coach INTEGER,
-    c1_view_olympiad INTEGER
+    c1_view_olympiad VARCHAR(30)
 
 )
 AS
@@ -138,11 +140,12 @@ $$
     END;
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS c2_view(c2 integer );
 CREATE OR REPLACE FUNCTION c2_view( c2 integer)
 RETURNS TABLE
 (
     c2_view_coach INTEGER,
-    c2_view_olympiad INTEGER
+    c2_view_olympiad VARCHAR(30)
 
 )
 AS
@@ -154,10 +157,11 @@ $$
     END;
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS c1_to_c2(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION c1_to_c2 (c1 integer, c2 integer)
 RETURNS TABLE
 (
-    c1_to_c2_olympiad INTEGER
+    c1_to_c2_olympiad VARCHAR(30)
 
 )
 AS
@@ -175,11 +179,12 @@ $$ LANGUAGE plpgsql;
 /*
  * gets all coaches in the same olympiad as c1 not including c1.
  */
+DROP FUNCTION IF EXISTS c1_plus(c1 integer);
 CREATE OR REPLACE FUNCTION c1_plus(c1 integer)
 RETURNS TABLE
 (
     c1_plus_coach INTEGER,
-    c1_plus_olympiad INTEGER
+    c1_plus_olympiad VARCHAR(30)
 
 )
 AS
@@ -198,11 +203,12 @@ $$ LANGUAGE plpgsql;
 /*
  * gets all coaches in the same olympiad as c2 not including c2.
  */
+DROP FUNCTION IF EXISTS c2_plus(c2 integer);
 CREATE OR REPLACE FUNCTION c2_plus(c2 integer)
 RETURNS TABLE
 (
     c2_plus_coach INTEGER,
-    c2_plus_olympiad INTEGER
+    c2_plus_olympiad VARCHAR(30)
 
 )
 AS
@@ -217,11 +223,13 @@ $$
     END;
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS c3_view(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION c3_view(c1 integer, c2 integer)
 RETURNS TABLE
 (
 
-    c3_view_olympiad INTEGER,
+    c3_view_olympiad VARCHAR(30),
+    --c3_view_olympiad4 VARCHAR(30),
     c3_view_coach INTEGER
 
 )
@@ -229,19 +237,20 @@ AS
 $$
     BEGIN
         RETURN QUERY SELECT c1_plus_olympiad, c1_plus_coach
-        FROM (c1_plus(c1) JOIN c2_plus(c2)
-            ON c1_plus_olympiad = c2_plus_olympiad)
-        WHERE c1_plus_coach = c2_plus_coach;
+        FROM (c1_plus(c1)  JOIN c2_plus(c2)
+            ON c1_plus_coach = c2_plus_coach);
+        ---WHERE c1_plus_coach = c2_plus_coach;
 
 
     END;
 $$ LANGUAGE plpgsql;
 
+DROP FUNCTION IF EXISTS c4_view(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION c4_view(c1 integer, c2 integer)
 RETURNS TABLE
 (
 
-    c4_view_olympiad INTEGER,
+    c4_view_olympiad VARCHAR(30),
     c4_view_coach3 INTEGER,
     c4_view_coach4 INTEGER
 
@@ -249,15 +258,17 @@ RETURNS TABLE
 AS
 $$
     BEGIN
+
+
         RETURN QUERY SELECT c1_plus_olympiad, c1_plus_coach, c2_plus_coach
         FROM (c1_plus(c1) JOIN c2_plus(c2)
-            ON c1_plus_olympiad = c2_plus_olympiad)
-        WHERE c1_plus_coach <> c2_plus_coach;
+            ON ((SELECT count(*) FROM c1_to_c2(c1_plus_coach, c2_plus_coach)) > 0::INTEGER)) AS T;
+        --WHERE ((SELECT count(*) FROM c1_to_c2(c1_plus_coach, c2_plus_coach)) > 0::INTEGER);
 
 
     END;
 $$ LANGUAGE plpgsql;
------------------------------------------------
+------------------------;-----------------------
 /* We used a non-recursive method using multiple views to save queries. First, we checked to make sure the coaches were not the same, then we check to see if they are in same Olympiad. We then look for a single coach who is in an Olympiad with both coaches, and finally we look for two coaches who are in the same olympiad, who each are in an Olympiad with one of the original coaches. NOTE: We had some difficulty with the parameters and tested by directly inserting values where C1 and c2 are in c1_view and c2_view. */
 DROP FUNCTION IF EXISTS connected_coaches(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION connected_coaches(c1 integer, c2 integer)
@@ -327,22 +338,25 @@ BEGIN
             ON C1_PLUS.c1_olympiad = C2_PLUS.c2_olympiad;*/
 
 
-    IF((SELECT count(*) FROM c1_to_c2(c1, c2)) > 0) THEN
+    IF((SELECT count(*) FROM c1_to_c2(c1, c2)) > 0::INTEGER) THEN
         connection:= c1 ||' → ' || c2;
         RETURN connection;
-    ELSIF((SELECT count(*) FROM c3_view(c1,c2) ) > 0) THEN
-        SELECT c3_view_coach AS c3
+    ELSIF((SELECT count(*) FROM c3_view(c1,c2) ) > 0::INTEGER) THEN
+        SELECT c3_view_coach
             FROM c3_view(c1, c2)
-            LIMIT 1;
-        connection := c1 || ' → ' || c3 || ' → ' || c2;
+            LIMIT 1
+            INTO c3;
+        connection := c1 || ' → '  || c3 || ' → ' || c2;
         RETURN connection;
-    ELSIF((SELECT count(*) FROM c4_view(c1,c2) ) > 0) THEN
-        SELECT c4_view_coach3 AS c3
+    ELSIF((SELECT count(*) FROM c4_view(c1,c2) ) > 0::INTEGER) THEN
+        SELECT c4_view_coach3
             FROM c4_view(c1,c2)
-            LIMIT 1;
-        SELECT c4_view_coach4 AS c4
+            LIMIT 1
+            INTO c3;
+        SELECT c4_view_coach4
             FROM c4_view(c1,c2)
-            LIMIT 1;
+            LIMIT 1
+            INTO c4;
         connection := c1 ||' → ' || c3 || ' → ' || c4 || ' → ' || c2;
         RETURN connection;
     ELSE
@@ -359,4 +373,22 @@ BEGIN
             RAISE NOTICE 'Error.';*/
 END
 $$ LANGUAGE plpgsql;
+
+SELECT c1_view(3);
+SELECT c2_view(5);
+SELECT c2_view (9);
+SELECT c1_plus(3);
+SELECT c2_plus(5);
+SELECT c2_plus(9);
+SELECT c3_view(3,5);
+SELECT c3_view(5,9);
+SELECT c3_view(41,9);
+SELECT c3_view(3,9);
+
+SELECT c4_view(3,5);
+SELECT c4_view(5,9);
+SELECT c4_view(41,9);
+SELECT c4_view(3,9);
+SELECT connected_coaches(3,5);
+SELECT connected_coaches(3,9);
 
