@@ -149,14 +149,52 @@ CREATE OR REPLACE PROCEDURE add_team_member(
     IN participant INTEGER)
 LANGUAGE plpgsql
 AS $$
+    DECLARE
+        participant_c VARCHAR;
+        team_c VARCHAR;
+        ts INTEGER;
+        current_ts INTEGER;
     BEGIN
-        --inserting into team member 
-        INSERT INTO olympic_schema.TEAM_MEMBERS(team, participant)
-            VALUES(team, participant);
-        RAISE NOTICE 'Team member added successfully.';
+        SELECT birth_country INTO participant_c
+        FROM olympic_schema.PARTICIPANT p
+        WHERE p.participant_id = participant;
 
-    --otherwise handle exceptions 
+        SELECT country INTO team_c
+        FROM olympic_schema.TEAM t
+        WHERE t.team_id = team;
+
+        IF participant_c = team_c THEN
+            SELECT COUNT(*) INTO current_ts
+            FROM team_members t
+            WHERE add_team_member.team = t.team
+            AND add_team_member.participant != t.participant;
+
+            SELECT team_size INTO ts
+            FROM sport s JOIN team t
+            ON s.sport_id = t.sport;
+
+            IF current_ts < ts THEN
+                INSERT INTO olympic_schema.TEAM_MEMBERS(team, participant)
+                    VALUES(team, participant);
+            ELSE
+                RAISE EXCEPTION 'Team is full';
+            END IF;
+        ELSE
+            RAISE EXCEPTION 'Participants country does not match teams country';
+        END IF;
+
+        --inserting into team member
+
+    --otherwise handle exceptions
     EXCEPTION
+        WHEN unique_violation THEN
+            RAISE EXCEPTION 'Unique constraint failed, team member already exists within that team';
+        WHEN foreign_key_violation THEN
+            IF SQLERRM LIKE '%tm_participant_fk%' THEN
+                RAISE EXCEPTION 'participant id is not valid';
+            ELSIF SQLERRM LIKE '%tm_team_fk%' THEN
+                RAISE EXCEPTION 'team id is not valid';
+            END IF;
         WHEN OTHERS THEN
             RAISE EXCEPTION 'Generic Error: %', SQLERRM;
 
