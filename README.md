@@ -52,4 +52,14 @@
         Connected to the database successfully.
     ```
 
-5.  You may now enter the various commands to access the operations. 
+5.  You may now enter the various commands to access the operations.
+
+---
+### Some quick notes ###
+1. Transaction isolation level is set to serializable to support concurrency
+2. We disabled auto-commit and instead committed and rollbacked in each operation
+3. Implemented exception handling within procedures and functions for exceptions like - unique, foreign key, domain violations
+4. We also validated string length within the Java app itself using helper functions
+5. Implemented RPAD for better formatting
+6. Connection has been created as an instance variable to prevent opening it multiple times
+7. Used parameterized queries and PreparedStatements to fight against SQL Injection 
