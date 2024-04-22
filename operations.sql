@@ -119,12 +119,12 @@ LANGUAGE plpgsql
 AS $$
     DECLARE
     --Using a CTE to remove participant--
-    --ON DELETE CASCADE is included in the schema but I initially implemented this operation 
-    --with a CTE. After testing, to me, it doesn't seem like DELETING the account after the 
-    --initial WITH query is causing any problems. 
+    --ON DELETE CASCADE is included in the schema but I initially implemented this operation
+    --with a CTE. After testing, to me, it doesn't seem like DELETING the account after the
+    --initial WITH query is causing any problems.
 
-    --It might be redundant, however due to include different types of queries, I decided to 
-    --keep this. I understand that it would be fine to not use a CTE in this case. 
+    --It might be redundant, however due to include different types of queries, I decided to
+    --keep this. I understand that it would be fine to not use a CTE in this case.
     BEGIN
         WITH participant_removal AS (
             DELETE FROM olympic_schema.participant
@@ -135,8 +135,10 @@ AS $$
         WHERE olympic_schema.account.account_id in (select participant_removal.account from participant_removal);
 
     EXCEPTION
+        WHEN foreign_key_violation THEN
+            RAISE EXCEPTION 'Foreign key violation.';
         WHEN OTHERS THEN
-            RAISE EXCEPTION 'Error - checking: %', SQLERRM;
+            RAISE EXCEPTION 'Error: %', SQLERRM;
 
     END
 $$;
