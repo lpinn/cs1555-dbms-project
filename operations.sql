@@ -352,14 +352,28 @@ create or replace procedure disqualify_team(IN disqualify_team integer)
     language plpgsql
 as
 $$
+    DECLARE
+        t_check INTEGER;
     BEGIN
+        IF disqualify_team < 0 THEN
+            RAISE EXCEPTION 'Invalid team number';
+        END IF;
+
+        SELECT COUNT(*) INTO t_check
+        FROM olympic_schema.team t
+        WHERE t.team_id = disqualify_team;
+
+        IF t_check = 0 THEN
+            RAISE EXCEPTION 'Team id is not valid';
+        end if;
+
 	UPDATE olympic_schema.team
             SET eligible = FALSE
             WHERE team_id = disqualify_team;
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION 'Error - %', SQLERRM;
 
     END
 $$;
