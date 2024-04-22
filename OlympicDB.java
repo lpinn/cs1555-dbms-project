@@ -246,8 +246,13 @@ public class OlympicDB {
                     break;
 
                 case "22":
-                    System.out.println("Listing top sports...");
-                    break;
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {   
+                        System.out.println("Listing top sports...");
+                        od.topSports();
+                    }break;
 
                 case "23":
                     System.out.println("Finding connected coaches...");

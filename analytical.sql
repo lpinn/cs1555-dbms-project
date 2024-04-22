@@ -106,6 +106,157 @@ $$
     END;
 
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION c_total ()
+RETURNS TABLE
+(
+    c_total_coach INTEGER,
+    c_total_olympiad INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT DISTINCT T.coach, T.olympiad
+        FROM olympic_schema.TEAM AS T;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION c1_view(c1 integer)
+RETURNS TABLE
+(
+    c1_view_coach INTEGER,
+    c1_view_olympiad INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT DISTINCT T1.coach, T1.olympiad
+        FROM olympic_schema.TEAM AS T1
+        WHERE T1.coach = c1;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION c2_view( c2 integer)
+RETURNS TABLE
+(
+    c2_view_coach INTEGER,
+    c2_view_olympiad INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT DISTINCT T2.coach, T2.olympiad
+        FROM olympic_schema.TEAM AS T2
+        WHERE T2.coach = c2;
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION c1_to_c2 (c1 integer, c2 integer)
+RETURNS TABLE
+(
+    c1_to_c2_olympiad INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT DISTINCT T.c1_view_olympiad
+            FROM (c1_view(c1) JOIN c2_view(c2)
+                ON c1_view_olympiad = c2_view_olympiad)
+                AS T;
+
+
+    END;
+$$ LANGUAGE plpgsql;
+
+/*
+ * gets all coaches in the same olympiad as c1 not including c1.
+ */
+CREATE OR REPLACE FUNCTION c1_plus(c1 integer)
+RETURNS TABLE
+(
+    c1_plus_coach INTEGER,
+    c1_plus_olympiad INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT c_total_coach, c_total_olympiad
+        FROM c1_view(c1) JOIN c_total()
+            ON c1_view_olympiad = c_total_olympiad
+        WHERE c1_view_coach <> c_total_coach;
+
+
+    END;
+$$ LANGUAGE plpgsql;
+
+
+/*
+ * gets all coaches in the same olympiad as c2 not including c2.
+ */
+CREATE OR REPLACE FUNCTION c2_plus(c2 integer)
+RETURNS TABLE
+(
+    c2_plus_coach INTEGER,
+    c2_plus_olympiad INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT c_total_coach, c_total_olympiad
+        FROM c2_view(c2) JOIN c_total()
+            ON c2_view_olympiad = c_total_olympiad
+        WHERE c2_view_coach <> c_total_coach;
+
+
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION c3_view(c1 integer, c2 integer)
+RETURNS TABLE
+(
+
+    c3_view_olympiad INTEGER,
+    c3_view_coach INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT c1_plus_olympiad, c1_plus_coach
+        FROM (c1_plus(c1) JOIN c2_plus(c2)
+            ON c1_plus_olympiad = c2_plus_olympiad)
+        WHERE c1_plus_coach = c2_plus_coach;
+
+
+    END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION c4_view(c1 integer, c2 integer)
+RETURNS TABLE
+(
+
+    c4_view_olympiad INTEGER,
+    c4_view_coach3 INTEGER,
+    c4_view_coach4 INTEGER
+
+)
+AS
+$$
+    BEGIN
+        RETURN QUERY SELECT c1_plus_olympiad, c1_plus_coach, c2_plus_coach
+        FROM (c1_plus(c1) JOIN c2_plus(c2)
+            ON c1_plus_olympiad = c2_plus_olympiad)
+        WHERE c1_plus_coach <> c2_plus_coach;
+
+
+    END;
+$$ LANGUAGE plpgsql;
 -----------------------------------------------
 /* We used a non-recursive method using multiple views to save queries. First, we checked to make sure the coaches were not the same, then we check to see if they are in same Olympiad. We then look for a single coach who is in an Olympiad with both coaches, and finally we look for two coaches who are in the same olympiad, who each are in an Olympiad with one of the original coaches. NOTE: We had some difficulty with the parameters and tested by directly inserting values where C1 and c2 are in c1_view and c2_view. */
 DROP FUNCTION IF EXISTS connected_coaches(c1 integer, c2 integer);
@@ -131,41 +282,41 @@ BEGIN
      );   */
 
     --- all coaches and olympiads
-    CREATE OR REPLACE VIEW C_TOTAL AS
+    
+    /*CREATE OR REPLACE VIEW C_TOTAL AS
         SELECT DISTINCT T.coach, T.olympiad
-        FROM olympic_schema.TEAM AS T;
+        FROM olympic_schema.TEAM AS T;*/
 
-    CREATE OR REPLACE VIEW C1_VIEW AS
-        SELECT DISTINCT T1.coach, T1.olympiad
+/*        SELECT DISTINCT T1.coach, T1.olympiad
         FROM olympic_schema.TEAM AS T1
-        WHERE T1.coach = c1::INTEGER;
+        WHERE T1.coach = c1::INTEGER;*/
 
-    CREATE OR REPLACE VIEW C2_VIEW AS
+    /*CREATE OR REPLACE VIEW C2_VIEW AS
         SELECT DISTINCT T2.coach, T2.olympiad
         FROM olympic_schema.TEAM AS T2
-        WHERE T2.coach = c2::INTEGER;
+        WHERE T2.coach = c2::INTEGER;*/
 
-    CREATE OR REPLACE VIEW C1_TO_C2 AS
+    /*CREATE OR REPLACE VIEW C1_TO_C2 AS
         SELECT *
         FROM C1_VIEW JOIN C2_VIEW
-            ON C1_VIEW.olympiad = C2_VIEW.olympiad;
+            ON C1_VIEW.olympiad = C2_VIEW.olympiad;*/
 
      --- all coaches in years with c1 but c1
-    CREATE OR REPLACE VIEW C1_PLUS AS
+    /*CREATE OR REPLACE VIEW C1_PLUS AS
         SELECT C1_VIEW.olympiad AS c1_olympiad, C_TOTAL.coach AS c1_coach
         FROM C1_VIEW JOIN C_TOTAL
             ON C1_VIEW.olympiad = C_TOTAL.olympiad
-        WHERE C1_VIEW.coach <> C_TOTAL.coach;
+        WHERE C1_VIEW.coach <> C_TOTAL.coach;*/
 
 
      --- all coaches in years with c2 but c2
-    CREATE OR REPLACE VIEW C2_PLUS AS
+    /*CREATE OR REPLACE VIEW C2_PLUS AS
         SELECT C2_VIEW.olympiad AS c2_olympiad, C_TOTAL.coach AS c2_coach
         FROM C2_VIEW JOIN C_TOTAL
             ON C2_VIEW.olympiad = C_TOTAL.olympiad
-        WHERE C2_VIEW.coach <> C_TOTAL.coach;
+        WHERE C2_VIEW.coach <> C_TOTAL.coach;*/
 
-    CREATE OR REPLACE VIEW C3_VIEW AS
+    /*CREATE OR REPLACE VIEW C3_VIEW AS
         SELECT C1_PLUS.c1_olympiad AS c1_olympiad, C2_PLUS.c2_olympiad AS c2_olympiad, C1_PlUS.c1_coach AS c3_coach
         FROM C1_PLUS JOIN C2_PLUS
             ON C1_PLUS.c1_coach = C2_PLUS.c2_coach;
@@ -173,26 +324,26 @@ BEGIN
     CREATE OR REPLACE VIEW C4_VIEW AS
         SELECT C1_PLUS.c1_olympiad AS olympiad, C1_PLUS.c1_coach AS c3_coach, C2_PLUS.c2_coach AS c4_coach
         FROM C1_PLUS JOIN C2_PLUS
-            ON C1_PLUS.c1_olympiad = C2_PLUS.c2_olympiad;
+            ON C1_PLUS.c1_olympiad = C2_PLUS.c2_olympiad;*/
 
 
-    IF((SELECT count(*) FROM C1_TO_C2) > 0) THEN
-        connection:= c1 ||' to ' || c2;
+    IF((SELECT count(*) FROM c1_to_c2(c1, c2)) > 0) THEN
+        connection:= c1 ||' → ' || c2;
         RETURN connection;
-    ELSIF((SELECT count(*) FROM C3_VIEW ) > 0) THEN
-        SELECT c3_coach AS c3
-            FROM C3_VIEW
+    ELSIF((SELECT count(*) FROM c3_view(c1,c2) ) > 0) THEN
+        SELECT c3_view_coach AS c3
+            FROM c3_view(c1, c2)
             LIMIT 1;
-        connection := c1 || ' to ' || c3 || ' to ' || c2;
+        connection := c1 || ' → ' || c3 || ' → ' || c2;
         RETURN connection;
-    ELSIF((SELECT count(*) FROM C4_VIEW ) > 0) THEN
-        SELECT c3_coach AS c3
-            FROM C4_VIEW
+    ELSIF((SELECT count(*) FROM c4_view(c1,c2) ) > 0) THEN
+        SELECT c4_view_coach3 AS c3
+            FROM c4_view(c1,c2)
             LIMIT 1;
-        SELECT c4_coach AS c4
-            FROM C4_VIEW
+        SELECT c4_view_coach4 AS c4
+            FROM c4_view(c1,c2)
             LIMIT 1;
-        connection := c1 ||' to ' || c3 || ' to ' || c4 || ' to ' || c2;
+        connection := c1 ||' → ' || c3 || ' → ' || c4 || ' → ' || c2;
         RETURN connection;
     ELSE
         connection := 'no path found';
