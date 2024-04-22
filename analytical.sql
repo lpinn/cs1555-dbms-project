@@ -86,7 +86,7 @@ $$
     BEGIN
         interval_text := x || ' years';
 
-        RETURN QUERY SELECT T1.sport_id, T1.sport_name, COUNT(T2.team) AS team_count
+        RETURN QUERY SELECT T1.sport_id, T1.sport_name, COUNT(T2.team)::INTEGER AS team_count
             FROM ((SELECT  S.sport_id, S.sport_name
                 FROM olympic_schema.SPORT AS S) AS T1
             JOIN (SELECT P.team, E.sport
@@ -106,6 +106,8 @@ $$
     END;
 
 $$ LANGUAGE plpgsql;
+
+SELECT top_sports(2,2);
 
 DROP FUNCTION IF EXISTS c_total();
 CREATE OR REPLACE FUNCTION c_total ()
@@ -272,9 +274,7 @@ $$ LANGUAGE plpgsql;
 /* We used a non-recursive method using multiple views to save queries. First, we checked to make sure the coaches were not the same, then we check to see if they are in same Olympiad. We then look for a single coach who is in an Olympiad with both coaches, and finally we look for two coaches who are in the same olympiad, who each are in an Olympiad with one of the original coaches. NOTE: We had some difficulty with the parameters and tested by directly inserting values where C1 and c2 are in c1_view and c2_view. */
 DROP FUNCTION IF EXISTS connected_coaches(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION connected_coaches(c1 integer, c2 integer)
-RETURNS TABLE(
-    connected_string VARCHAR(60)
-)
+RETURNS TEXT
 AS
 $$
 DECLARE
