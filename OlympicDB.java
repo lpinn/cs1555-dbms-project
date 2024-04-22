@@ -849,6 +849,11 @@ public class OlympicDB {
         }
     }
 
+    /*addEvent
+     * calls add_event procedure with user input
+     * inputs: venue_id, olympiad_id, sport_id, gender, date
+     * no return value
+     */
     public void addEvent(){        
         CallableStatement properCase = null;
         try {
@@ -886,6 +891,11 @@ public class OlympicDB {
         }
     }
 
+    /*addTeamToEvent
+     * calls add_team_to_event procedure with user input
+     * inputs: event_id, team_id
+     * no return value
+     */
     public void addTeamToEvent(){        
         CallableStatement properCase = null;
         try {
@@ -918,8 +928,14 @@ public class OlympicDB {
     }
 
 
-    //--------------------------------------------------------------------------------------
-    // need to add medal considerations and no events considerations
+
+    /*addEventOutcome
+     * calls add_event_outcome procedure with user input
+     * inputs: event_id, team_id, position
+     * checks to make sure events exist and gives exception if there are no events
+     * checks for valid user input
+     * no return value
+     */
     public void addEventOutcome(){        
         CallableStatement properCase = null;
         CallableStatement checkEvents = null;
@@ -930,10 +946,10 @@ public class OlympicDB {
             boolean keepAdding = true;
             while(keepAdding){
                 
-                //checkEvents = conn.prepareCall("SELECT check_num_events()");
-                //rs = checkEvents.executeQuery();
+               // checkEvents = conn.prepareCall("SELECT * FROM check_num_events()");
+               // rs = checkEvents.executeQuery();
 
-                /*boolean eventsNum = rs.getBoolean("check_event");
+               /* boolean eventsNum = rs.getBoolean("check_event");
                 if(eventsNum == false){
                     System.out.println("No Outcomes were added since there are no Events");
                 }*/
@@ -975,6 +991,11 @@ public class OlympicDB {
         }
     }
 
+      /*disqualifyTeam
+     * calls disqualify_team procedure with user input
+     * inputs: team_id
+     * no return value
+     */
     public void disqualifyTeam(){        
 
         CallableStatement properCase = null;
@@ -1005,6 +1026,11 @@ public class OlympicDB {
         }
     }
 
+      /*listVenuesInOlympiad
+     * calls list_venues_in_olympiad function with user input
+     * inputs: olympiad_num
+     * returns table of venues and capacity
+     */
     public void listVenuesInOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1051,6 +1077,11 @@ public class OlympicDB {
         }
     }
 
+     /*listVenuesInOlympiad
+     * calls list_venues_in_olympiad function with user input
+     * inputs: olympiad_num
+     * returns table of venues and capacity
+     */
     public void listEventsOfOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1101,7 +1132,11 @@ public class OlympicDB {
             closeStatement(properCase);
         }
     }
-
+     /*listTeamsInEvent
+     * calls list_teams_in_event function with user input
+     * inputs: event_id
+     * returns table of teams
+     */
     public void listTeamsInEvent(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1137,6 +1172,11 @@ public class OlympicDB {
         }
     }
 
+     /*showPlacementsInEvent
+     * calls show_placements_in_events function with user input
+     * inputs: event_id
+     * returns table of placements
+     */
     public void showPlacementsInEvent(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
@@ -1246,6 +1286,11 @@ public class OlympicDB {
         }
     }
 
+     /*listCountryPlacementsInOlympiad
+     * calls list_country_in_olympiad function with user input
+     * inputs: olympiad_num, country_code
+     * returns table of placements
+     */
     public void listCountryPlacementsInOlympiad(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
