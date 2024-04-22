@@ -107,7 +107,7 @@ $$
 
 $$ LANGUAGE plpgsql;
 
-SELECT top_sports(2,2);
+SELECT top_sports(20,2);
 
 DROP FUNCTION IF EXISTS c_total();
 CREATE OR REPLACE FUNCTION c_total ()
@@ -290,57 +290,6 @@ BEGIN
         connection := c1 || ' = ' || c2;
         RETURN QUERY SELECT connection;
     END IF;
-
-    /*CREATE OR REPLACE TABLE C_INPUT(
-        c1 integer,
-        c2 integer;
-     );   */
-
-    --- all coaches and olympiads
-    
-    /*CREATE OR REPLACE VIEW C_TOTAL AS
-        SELECT DISTINCT T.coach, T.olympiad
-        FROM olympic_schema.TEAM AS T;*/
-
-/*        SELECT DISTINCT T1.coach, T1.olympiad
-        FROM olympic_schema.TEAM AS T1
-        WHERE T1.coach = c1::INTEGER;*/
-
-    /*CREATE OR REPLACE VIEW C2_VIEW AS
-        SELECT DISTINCT T2.coach, T2.olympiad
-        FROM olympic_schema.TEAM AS T2
-        WHERE T2.coach = c2::INTEGER;*/
-
-    /*CREATE OR REPLACE VIEW C1_TO_C2 AS
-        SELECT *
-        FROM C1_VIEW JOIN C2_VIEW
-            ON C1_VIEW.olympiad = C2_VIEW.olympiad;*/
-
-     --- all coaches in years with c1 but c1
-    /*CREATE OR REPLACE VIEW C1_PLUS AS
-        SELECT C1_VIEW.olympiad AS c1_olympiad, C_TOTAL.coach AS c1_coach
-        FROM C1_VIEW JOIN C_TOTAL
-            ON C1_VIEW.olympiad = C_TOTAL.olympiad
-        WHERE C1_VIEW.coach <> C_TOTAL.coach;*/
-
-
-     --- all coaches in years with c2 but c2
-    /*CREATE OR REPLACE VIEW C2_PLUS AS
-        SELECT C2_VIEW.olympiad AS c2_olympiad, C_TOTAL.coach AS c2_coach
-        FROM C2_VIEW JOIN C_TOTAL
-            ON C2_VIEW.olympiad = C_TOTAL.olympiad
-        WHERE C2_VIEW.coach <> C_TOTAL.coach;*/
-
-    /*CREATE OR REPLACE VIEW C3_VIEW AS
-        SELECT C1_PLUS.c1_olympiad AS c1_olympiad, C2_PLUS.c2_olympiad AS c2_olympiad, C1_PlUS.c1_coach AS c3_coach
-        FROM C1_PLUS JOIN C2_PLUS
-            ON C1_PLUS.c1_coach = C2_PLUS.c2_coach;
-
-    CREATE OR REPLACE VIEW C4_VIEW AS
-        SELECT C1_PLUS.c1_olympiad AS olympiad, C1_PLUS.c1_coach AS c3_coach, C2_PLUS.c2_coach AS c4_coach
-        FROM C1_PLUS JOIN C2_PLUS
-            ON C1_PLUS.c1_olympiad = C2_PLUS.c2_olympiad;*/
-
 
     IF((SELECT count(*) FROM c1_to_c2(c1, c2)) > 0::INTEGER) THEN
         connection:= c1 ||' to ' || c2;

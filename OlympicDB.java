@@ -742,7 +742,7 @@ public class OlympicDB {
             boolean keepAdding = true;
             while(keepAdding){
                 
-                checkEvents = conn.prepareCall("{SELECT check_num_events()}");
+                checkEvents = conn.prepareCall("{SELECT * FROM check_num_events()}");
                 rs = checkEvents.executeQuery();
 
                 boolean eventsNum = rs.getBoolean("check_event");
@@ -822,7 +822,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT * list_venues_in_olympiad ( ? )");
+            properCase = conn.prepareCall("SELECT * FROM list_venues_in_olympiad ( ? )");
         
         
             System.out.println("Enter olympiad id: ");
@@ -858,7 +858,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT *  list_events_of_olympiad ( ?)");
+            properCase = conn.prepareCall("SELECT * FROM list_events_of_olympiad ( ?)");
         
         
             System.out.println("Enter olympiad id: ");
@@ -904,7 +904,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT * list_teams_in_event ( ?) ");
+            properCase = conn.prepareCall("SELECT * FROM list_teams_in_event ( ?) ");
         
         
             System.out.println("Enter event id: ");
@@ -1141,7 +1141,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT * top_sports ( ?, ?) ");
+            properCase = conn.prepareCall("SELECT * FROM top_sports ( ?, ?) ");
         
         
             System.out.println("Enter the number of years to search (x): ");
@@ -1154,7 +1154,7 @@ public class OlympicDB {
             properCase.setInt(2, k);
             
             rs = properCase.executeQuery();
-            System.out.print("Top " + k + "sports in last " + x + " years:  \n\n\n");
+            System.out.print("Top " + k + " sports in last " + x + " years:  \n\n\n");
            
             /*
              * sport_id   INTEGER,
@@ -1191,7 +1191,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("SELECT * connected_coaches( ?, ?) ");
+            properCase = conn.prepareCall("SELECT * FROM connected_coaches( ?, ?) ");
         
         
             System.out.println("Enter the first coach's ID (c1): ");
@@ -1204,12 +1204,12 @@ public class OlympicDB {
             properCase.setInt(2, c2);
             
             
-                rs = properCase.executeQuery();
-
+            rs = properCase.executeQuery();
+            while(rs.next() ){
                 String connection = rs.getString("connect_string");
                 System.out.println("Coach connection: " + connection);
             
-            
+            }
 
             System.out.println("Listed top sports in olympics\n");
         } catch (NoSuchElementException ex) {
