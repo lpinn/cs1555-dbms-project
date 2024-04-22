@@ -99,6 +99,10 @@ AS $$
     EXCEPTION
         WHEN string_data_right_truncation THEN
             RAISE EXCEPTION 'Either/or both username and password are too long, ensure that they are 30 characters or less';
+	WHEN foreign_key_violation THEN
+            RAISE EXCEPTION 'Foreign key violation - Make sure you enter a valid Country Code';
+        WHEN check_violation THEN
+            RAISE EXCEPTION 'Domain check is violated - make sure you enter either M or F in this scenario.';
         WHEN OTHERS THEN
             RAISE EXCEPTION '%', SQLERRM;
     END
