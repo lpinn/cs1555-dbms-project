@@ -262,6 +262,7 @@ public class OlympicDB {
                         System.out.println("You need to connect to a DB first."); 
                     } else {   
                         System.out.println("Finding connected coaches...");
+                        od.connectedCoaches();
                     }
                     break;
 
@@ -820,7 +821,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ SELECT * list_venues_in_olympiad ( ? }");
+            properCase = conn.prepareCall("SELECT * list_venues_in_olympiad ( ? )");
         
         
             System.out.println("Enter olympiad id: ");
@@ -856,7 +857,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ SELECT *  list_events_of_olympiad ( ?) }");
+            properCase = conn.prepareCall("SELECT *  list_events_of_olympiad ( ?)");
         
         
             System.out.println("Enter olympiad id: ");
@@ -1139,7 +1140,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ SELECT * top_sports ( ?, ?) }");
+            properCase = conn.prepareCall("SELECT * top_sports ( ?, ?) ");
         
         
             System.out.println("Enter the number of years to search (x): ");
@@ -1189,7 +1190,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ SELECT * connected_coaches ( ?, ?) }");
+            properCase = conn.prepareCall("SELECT * connected_coaches( ?, ?) ");
         
         
             System.out.println("Enter the first coach's ID (c1): ");
@@ -1201,10 +1202,12 @@ public class OlympicDB {
             properCase.setInt(1, c1);
             properCase.setInt(2, c2);
             
-            rs = properCase.executeQuery();
+            
+                rs = properCase.executeQuery();
 
-            String connection = rs.getString("connected_string");
-            System.out.println("Coach connection: " + connection);
+                String connection = rs.getString("connect_string");
+                System.out.println("Coach connection: " + connection);
+            
             
 
             System.out.println("Listed top sports in olympics\n");

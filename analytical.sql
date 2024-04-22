@@ -274,11 +274,13 @@ $$ LANGUAGE plpgsql;
 /* We used a non-recursive method using multiple views to save queries. First, we checked to make sure the coaches were not the same, then we check to see if they are in same Olympiad. We then look for a single coach who is in an Olympiad with both coaches, and finally we look for two coaches who are in the same olympiad, who each are in an Olympiad with one of the original coaches. NOTE: We had some difficulty with the parameters and tested by directly inserting values where C1 and c2 are in c1_view and c2_view. */
 DROP FUNCTION IF EXISTS connected_coaches(c1 integer, c2 integer);
 CREATE OR REPLACE FUNCTION connected_coaches(c1 integer, c2 integer)
-RETURNS TEXT
+RETURNS TABLE(
+    connect_string VARCHAR(60)
+             )
 AS
 $$
 DECLARE
-    connection TEXT;
+    connection varchar(60);
     --c1 integer = 8;
     --c2 integer = 3;
     c3 integer;
@@ -286,7 +288,7 @@ DECLARE
 BEGIN
     IF(c1 = c2) THEN
         connection := c1 || ' = ' || c2;
-        RETURN connection;
+        RETURN QUERY SELECT connection;
     END IF;
 
     /*CREATE OR REPLACE TABLE C_INPUT(
@@ -341,15 +343,15 @@ BEGIN
 
 
     IF((SELECT count(*) FROM c1_to_c2(c1, c2)) > 0::INTEGER) THEN
-        connection:= c1 ||' → ' || c2;
-        RETURN connection;
+        connection:= c1 ||' to ' || c2;
+        RETURN QUERY SELECT connection;
     ELSIF((SELECT count(*) FROM c3_view(c1,c2) ) > 0::INTEGER) THEN
         SELECT c3_view_coach
             FROM c3_view(c1, c2)
             LIMIT 1
             INTO c3;
-        connection := c1 || ' → '  || c3 || ' → ' || c2;
-        RETURN connection;
+        connection := c1 || ' to '  || c3 || ' to ' || c2;
+        RETURN QUERY SELECT connection;
     ELSIF((SELECT count(*) FROM c4_view(c1,c2) ) > 0::INTEGER) THEN
         SELECT c4_view_coach3
             FROM c4_view(c1,c2)
@@ -360,10 +362,10 @@ BEGIN
             LIMIT 1
             INTO c4;
         connection := c1 ||' → ' || c3 || ' → ' || c4 || ' → ' || c2;
-        RETURN connection;
+        RETURN QUERY SELECT connection;
     ELSE
         connection := 'no path found';
-        RETURN connection;
+        RETURN QUERY SELECT connection;
 
     END IF;
 
