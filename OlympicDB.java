@@ -1419,6 +1419,12 @@ public class OlympicDB {
         }
     }
 
+
+     /*listAthletePlacement
+     * calls list_athlete_placement function with user input
+     * inputs: participant_id
+     * returns table of placements
+     */
     public void listAthletePlacement(){        
         CallableStatement properCase = null;
         ResultSet rs = null;
