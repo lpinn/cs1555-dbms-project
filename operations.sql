@@ -515,8 +515,12 @@ RETURNS TABLE(
     )
 as
 $$
----DECLARE
+    DECLARE
+        participant_check INTEGER;
     BEGIN
+        IF participant_id < 0 THEN
+            RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
 
         RETURN QUERY SELECT P.event, P.team, P.medal, P.position
             FROM olympic_schema.PLACEMENT AS P
@@ -526,6 +530,6 @@ $$
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
