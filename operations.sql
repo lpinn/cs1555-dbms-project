@@ -392,24 +392,33 @@ $$  language plpgsql;
 CREATE OR REPLACE FUNCTION listTeamsInEvent(event_id integer)
 RETURNS TABLE(
         team_id integer
-        ---olympiad varchar(30),
-        ---sport integer,
-        --coach integer,
-       --- country char(3),
-        ---gender olympiad_schema.team_gender_check,
-        ---eligible boolean
     )
 as
 $$
-
+    DECLARE
+        e_check INTEGER;
+        ee INTEGER;
     BEGIN
+        ee = event_id;
+        IF event_id < 0 THEN
+            RAISE EXCEPTION 'Invalid event_id presented';
+        END IF;
+
+        SELECT COUNT(*) INTO e_check
+        FROM olympic_schema.event e
+        WHERE e.event_id = ee;
+
+        IF e_check = 0 THEN
+            RAISE EXCEPTION 'Event_id does not exist';
+        END IF;
+
         RETURN QUERY SELECT P.team
             FROM olympic_schema.PLACEMENT AS P
             WHERE event_id = P.event;
 
         EXCEPTION
             WHEN OTHERS THEN
-                RAISE EXCEPTION 'Generic Error: %', SQLERRM;
+                RAISE EXCEPTION '%', SQLERRM;
     END
 $$  language plpgsql;
 
