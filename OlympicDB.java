@@ -903,7 +903,7 @@ public class OlympicDB {
         ResultSet rs = null;
         
         try {
-            properCase = conn.prepareCall("{ SELECT * list_teams_in_event ( ?) }");
+            properCase = conn.prepareCall("SELECT * list_teams_in_event ( ?) ");
         
         
             System.out.println("Enter event id: ");

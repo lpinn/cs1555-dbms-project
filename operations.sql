@@ -1,4 +1,5 @@
 /* 1 - CREATE ACCOUNT */
+DROP FUNCTION IF EXISTS create_account(username VARCHAR(30), passkey VARCHAR(30), role VARCHAR(12));
 CREATE OR REPLACE FUNCTION create_account(
     IN username VARCHAR(30),
     IN passkey VARCHAR(30),
@@ -68,6 +69,7 @@ AS $$
 $$;
 
 /* 3. - ADD PARTICIPANT */
+DROP FUNCTION IF EXISTS add_participant(account_id INTEGER, first VARCHAR(30), middle VARCHAR(30), last VARCHAR(30), birth_country CHAR(3), dob TIMESTAMP, gender VARCHAR(1));
 CREATE OR REPLACE FUNCTION add_participant (
     IN account_id INTEGER,
     IN first VARCHAR(30),
@@ -257,7 +259,7 @@ AS $$
 $$;
 
 /* 8. - ADD EVENT */
-CREATE PROCEDURE add_event(
+CREATE OR REPLACE PROCEDURE add_event(
     IN venue_id VARCHAR(30),
     IN olympiad_id VARCHAR(30),
     IN sport_id INTEGER,
@@ -301,22 +303,28 @@ alter procedure  add_team_to_event(integer, integer) owner to postgres;
 /* need to add medal considerations -- handeled by trigger?
  * need to add no-event considerations
  */
-
+DROP FUNCTION IF EXISTS check_num_events();
 CREATE OR REPLACE FUNCTION check_num_events()
 RETURNS TABLE(
-    check_event boolean;
+    check_event boolean
 )
 AS
 $$
+    DECLARE
+        event_check_num INTEGER;
+        event_check BOOLEAN;
+
     BEGIN
         
-        SELECT COUNT(*) INTO event_check
+        SELECT COUNT(*) INTO event_check_num
         FROM olympic_schema.EVENT;
         
-        IF event_check < 1 THEN
-            RETURN FALSE;
+        IF event_check_num < 1 THEN
+            event_check = false;
+            RETURN QUERY SELECT event_check;
         ELSE
-            RETURN TRUE;
+            event_check = true;
+            RETURN QUERY SELECT event_check;
         END IF;
     END;
 $$ LANGUAGE plpgsql;
@@ -325,6 +333,8 @@ create or replace procedure add_event_outcome(IN outcome_event integer, IN outco
     language  plpgsql
 as
 $$
+    DECLARE
+        event_check INTEGER;
     BEGIN
 
         SELECT COUNT(*) INTO event_check
