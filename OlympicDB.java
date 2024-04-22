@@ -257,7 +257,12 @@ public class OlympicDB {
                     }break;
 
                 case "23":
-                    System.out.println("Finding connected coaches...");
+                    System.out.println("---");
+                    if(od.connected == false){
+                        System.out.println("You need to connect to a DB first."); 
+                    } else {   
+                        System.out.println("Finding connected coaches...");
+                    }
                     break;
 
                 case "24":
