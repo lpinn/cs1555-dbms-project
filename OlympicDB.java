@@ -523,6 +523,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());																																		 
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -553,6 +554,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());																							 
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -604,6 +606,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -719,6 +722,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());																																			 
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -834,6 +838,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -870,6 +875,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -900,6 +906,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -923,16 +930,16 @@ public class OlympicDB {
             boolean keepAdding = true;
             while(keepAdding){
                 
-               // checkEvents = conn.prepareCall("SELECT * FROM check_num_events()");
-               // rs = checkEvents.executeQuery();
+                //checkEvents = conn.prepareCall("SELECT check_num_events()");
+                //rs = checkEvents.executeQuery();
 
-               /* boolean eventsNum = rs.getBoolean("check_event");
+                /*boolean eventsNum = rs.getBoolean("check_event");
                 if(eventsNum == false){
                     System.out.println("No Outcomes were added since there are no Events");
                 }*/
 
 
-                properCase = conn.prepareCall("{CALL add_team_to_event ( ?, ?, ?) }");
+                properCase = conn.prepareCall("{CALL add_team_to_event ( ?, ?, ?)}");
             
                 int event_id = readInt(sc, "Enter event id: ");
 
@@ -987,6 +994,7 @@ public class OlympicDB {
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
+            System.err.println(ex.getMessage()); 
             try {
                 conn.rollback();
             } catch (SQLException e){
@@ -1004,12 +1012,12 @@ public class OlympicDB {
         try {
             properCase = conn.prepareCall("SELECT * FROM list_venues_in_olympiad ( ? )");
         
-            String olympiad_id = readString(sc, "Enter olympiad num: ", 30, false);
+            String olympiad_num = readString(sc, "Enter olympiad id: ", 30, false);
             
-            properCase.setString(1, olympiad_id);
+            properCase.setString(1, olympiad_num);
             
             rs = properCase.executeQuery();
-            System.out.print("Venues in olympiad " + olympiad_id + ":  \n\n\n");
+            System.out.print("Venues in olympiad " + olympiad_num + ":  \n\n\n");
 
             StringBuffer output = new StringBuffer("");
             output.append(rPad("Venue", 40));
@@ -1026,7 +1034,7 @@ public class OlympicDB {
             }
 
             if (i == 0) {
-                System.out.println("No venues found for olympiad " + olympiad_id + "\n");
+                System.out.println("No venues found for olympiad " + olympiad_num + "\n");
             } else {
                 System.out.println(output.toString());
             }
@@ -1118,6 +1126,7 @@ public class OlympicDB {
 
             System.out.println(output.toString()); 
 
+            System.out.println("listed venues\n");
         } catch (NoSuchElementException ex) {
             System.err.println("No lines were read from user input, please try again " + ex.getMessage());
         } catch (SQLException ex) {
@@ -1379,7 +1388,7 @@ public class OlympicDB {
             properCase.setInt(1, participant_id);
             
             rs = properCase.executeQuery();
-            System.out.print("Placements for participant " + participant_id + ":  \n\n\n");
+            System.out.print("Placements in event " + participant_id + ":  \n\n\n");
         
             while(rs.next() ){
                 num++; 
@@ -1392,7 +1401,7 @@ public class OlympicDB {
                 sb.append("Event ID is : " + event + "\n");
                 sb.append("Team ID is: "+ team + "\n");
                 sb.append("Event medal is: "+ medal + "\n");
-                sb.append("Event position is: "+ position + "\n \n");
+                sb.append("Event position is: "+ position + "\n");
             }
 
             if(num == 0){
