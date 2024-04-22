@@ -326,22 +326,3 @@ BEGIN
             RAISE NOTICE 'Error.';*/
 END
 $$ LANGUAGE plpgsql;
-
-SELECT c1_view(3);
-SELECT c2_view(5);
-SELECT c2_view (9);
-SELECT c1_plus(3);
-SELECT c2_plus(5);
-SELECT c2_plus(9);
-SELECT c3_view(3,5);
-SELECT c3_view(5,9);
-SELECT c3_view(41,9);
-SELECT c3_view(3,9);
-
-SELECT c4_view(3,5);
-SELECT c4_view(5,9);
-SELECT c4_view(41,9);
-SELECT c4_view(3,9);
-SELECT connected_coaches(3,5);
-SELECT connected_coaches(3,9);
-
